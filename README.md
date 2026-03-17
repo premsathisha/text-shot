@@ -6,12 +6,6 @@ Text Shot is a lightweight macOS screenshot-to-text utility that lets you captur
 
 ![Text Shot screenshot](assets/screenshot.png)
 
-## Who It Is For
-
-- Keyboard-first macOS users
-- Users who extract text from videos, images, or on-screen content
-- Users who prefer local-first utilities
-
 ## Key Features
 
 - Fully local OCR processing
@@ -20,6 +14,12 @@ Text Shot is a lightweight macOS screenshot-to-text utility that lets you captur
 - No login or accounts
 - No runtime network access
 - Fast capture-to-text workflow
+  
+## Who It Is For
+
+- Keyboard-first macOS users
+- Users who extract text from videos, images, or on-screen content
+- Users who prefer local-first utilities
 
 ## How It Works
 
