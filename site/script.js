@@ -3,7 +3,7 @@ const body = document.body;
 const timeNode = document.getElementById("mst-time");
 const timeIconNode = document.getElementById("footer-time-icon-svg");
 const themeToggle = document.getElementById("theme-toggle");
-const versionPill = document.getElementById("version-pill");
+const downloadButton = document.getElementById("download-button");
 
 const formatter = new Intl.DateTimeFormat("en-US", {
   hour: "2-digit",
@@ -87,38 +87,41 @@ function getInitialTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-async function loadLatestVersion() {
-  if (!versionPill) {
+async function loadLatestReleaseDownload() {
+  if (!downloadButton) {
     return;
   }
 
   try {
-    const response = await fetch("./dist-appcast/appcast.xml", { cache: "no-store" });
+    const response = await fetch("https://api.github.com/repos/premsathisha/text-shot/releases/latest", {
+      headers: { Accept: "application/vnd.github+json" },
+      cache: "no-store",
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    const xmlText = await response.text();
-    const xml = new DOMParser().parseFromString(xmlText, "application/xml");
-    const version =
-      xml.querySelector("sparkle\\:shortVersionString")?.textContent ||
-      xml.querySelector("sparkle\\:version")?.textContent ||
-      xml.querySelector("item > title")?.textContent;
+    const release = await response.json();
+    const dmgAsset = release.assets?.find((asset) => typeof asset.name === "string" && asset.name.endsWith(".dmg"));
 
-    if (!version) {
-      throw new Error("Missing version");
+    if (!dmgAsset?.browser_download_url) {
+      throw new Error("Missing DMG asset");
     }
 
-    versionPill.textContent = `Latest version: ${version}`;
+    downloadButton.href = dmgAsset.browser_download_url;
+    downloadButton.setAttribute("download", dmgAsset.name);
+    downloadButton.removeAttribute("aria-disabled");
   } catch (error) {
-    versionPill.textContent = "Latest version available on GitHub Releases";
-    console.error("Unable to load appcast version", error);
+    downloadButton.href = "https://github.com/premsathisha/text-shot/releases/latest";
+    downloadButton.setAttribute("aria-disabled", "true");
+    console.error("Unable to load latest DMG download", error);
   }
 }
 
 applyTheme(getInitialTheme());
 renderMstTime();
-loadLatestVersion();
+loadLatestReleaseDownload();
 window.setInterval(renderMstTime, 1000);
 
 if (themeToggle) {
