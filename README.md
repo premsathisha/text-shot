@@ -10,7 +10,7 @@ Text Shot is a lightweight macOS screenshot-to-text utility that lets you captur
 
 - Fully local OCR processing
 - Smart Line Formatting
-- Lightweight (~2 MB)
+- Lightweight (~8 MB)
 - Native macOS experience
 - No login or accounts
 - Optional native app updates in signed release builds

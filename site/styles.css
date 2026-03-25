@@ -179,14 +179,6 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   padding: var(--section-space-y) var(--space-52);
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-24);
-  margin-bottom: var(--section-space-title);
-}
-
 .section-title {
   margin: 0 0 var(--section-space-title);
   color: var(--text-primary);
@@ -198,22 +190,18 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   text-transform: uppercase;
 }
 
-.section-title-main {
-  margin-bottom: 0;
-}
-
 .download-button {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  flex: none;
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 42px;
+  margin-top: 22px;
+  padding: 0 16px;
   border-radius: 75px;
   background: #111;
   color: #fff;
   font-family: var(--body-font);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.02em;
   text-decoration: none;
@@ -228,6 +216,11 @@ body[data-theme="dark"] .download-button {
 .download-button:hover,
 .download-button:focus-visible {
   transform: translateY(-1px);
+}
+
+body[data-theme="dark"] .download-button:hover,
+body[data-theme="dark"] .download-button:focus-visible {
+  color: #111;
 }
 
 .download-button[aria-disabled="true"] {
@@ -257,6 +250,10 @@ body[data-theme="dark"] .download-button {
 
 .body-copy-wide {
   max-width: none;
+}
+
+.body-copy-intro {
+  text-align: center;
 }
 
 .skill-chip {
@@ -358,9 +355,7 @@ body[data-theme="dark"] .footer-copy {
 }
 
 body[data-theme="dark"] .contact-link:hover,
-body[data-theme="dark"] .contact-link:focus-visible,
-body[data-theme="dark"] .download-button:hover,
-body[data-theme="dark"] .download-button:focus-visible {
+body[data-theme="dark"] .contact-link:focus-visible {
   color: var(--text-primary);
 }
 
@@ -467,11 +462,6 @@ body[data-theme="dark"] .theme-toggle-button {
   .topbar-nav {
     gap: var(--space-12);
     flex-wrap: wrap;
-  }
-
-  .section-header {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .contact-grid {
