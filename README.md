@@ -30,18 +30,6 @@ Use your keyboard shortcut to start a quick screen selection. Text Shot reads th
 
 Download the DMG from the Releases section, open it, and move Text Shot into your Applications folder. Launch the app, grant the required permissions, set your preferred shortcut (default: Cmd + Shift + 2), and start capturing text.
 
-## Updates
-
-Text Shot 3.0.1 is part of the first Sparkle-enabled release line. Builds embed the production Sparkle feed URL and public EdDSA key so the in-app update controls remain connected to the live feed, while local release packaging can remain unsigned.
-
-Local Sparkle release process:
-
-1. Keep the Sparkle private EdDSA key available to `generate_appcast` via Keychain or `SPARKLE_PRIVATE_ED_KEY`.
-2. Point `SPARKLE_BIN_DIR` at the official Sparkle `bin/` directory.
-3. Run `bash scripts/release-native.sh --set-version <x.y.z>`.
-
-By default, Sparkle publish artifacts land in `dist-appcast/` for publishing. `release/` remains reserved for the latest DMG and checksum.
-
 ## Built from Source
 
 For developers who want to build Text Shot locally.

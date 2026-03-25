@@ -6,7 +6,7 @@
     <title>Text Shot</title>
     <meta
       name="description"
-      content="Text Shot is a lightweight macOS screenshot-to-text utility built for fast local OCR."
+      content="Key features, ideal users, and workflow details for Text Shot on macOS."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +16,7 @@
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="text-shot-home">
+  <body class="text-shot-projects">
     <script>
       (function () {
         const storageKey = "prem-website-theme";
@@ -35,8 +35,8 @@
       <div class="resume-sheet">
         <header class="topbar section-divider">
           <nav class="topbar-nav" aria-label="Primary">
-            <a class="topbar-link is-active" href="./index.html" aria-current="page">Text Shot</a>
-            <a class="topbar-link" href="./projects.html">Text Shot</a>
+            <a class="topbar-link" href="./index.html">Text Shot</a>
+            <a class="topbar-link is-active" href="./projects.html" aria-current="page">Text Shot</a>
           </nav>
           <div class="topbar-actions">
             <button class="theme-toggle-button" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
@@ -62,62 +62,80 @@
           </div>
         </header>
 
-        <section class="hero section-divider">
-          <div class="product-mark" aria-hidden="true">TS</div>
-          <h1 class="hero-name">Text Shot</h1>
-          <p class="hero-role hero-role-product">
-            Lightweight macOS screenshot-to-text utility for fast, local, keyboard-first OCR.
-          </p>
-          <div class="hero-actions">
-            <a class="hero-button hero-button-primary" href="https://github.com/premsathisha/text-shot/releases/latest">Download Latest Release</a>
-            <a class="hero-button" href="./dist-appcast/appcast.xml">Appcast</a>
-          </div>
-          <div class="hero-status">
-            <span class="skill-chip" id="version-pill">Loading latest version...</span>
-            <span class="skill-chip">macOS 13+</span>
-            <span class="skill-chip">On-device OCR</span>
-          </div>
-        </section>
-
         <section class="content-section section-divider">
-          <h2 class="section-title">Text Shot</h2>
-          <p class="body-copy body-copy-wide">
-            Text Shot is a lightweight macOS screenshot-to-text utility that lets you capture any
-            screen region and instantly extract text using on-device OCR. It runs entirely
-            on-device for OCR and is built for speed, simplicity, and keyboard-driven workflows. It
-            requires macOS Screen Recording permission to capture selected regions, collects no
-            data, and needs no account.
-          </p>
-        </section>
+          <h2 class="section-title">Key Features</h2>
 
-        <section class="content-section section-divider">
-          <h2 class="section-title">Installation</h2>
-          <article class="entry entry-last">
-            <p class="body-copy body-copy-wide">
-              Download the DMG from the Releases section, open it, and move Text Shot into your
-              Applications folder. Launch the app, grant the required permissions, set your
-              preferred shortcut (default: Cmd + Shift + 2), and start capturing text.
+          <article class="entry certificate">
+            <div class="certificate-header">
+              <div>
+                <h3 class="entry-title">Fully local OCR processing</h3>
+                <p class="entry-meta">PRIVACY · SPEED</p>
+              </div>
+              <span class="certificate-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </span>
+            </div>
+            <p class="body-copy">Fully local OCR processing</p>
+          </article>
+
+          <article class="entry certificate">
+            <div class="certificate-header">
+              <div>
+                <h3 class="entry-title">Smart Line Formatting</h3>
+                <p class="entry-meta">READABILITY · OUTPUT</p>
+              </div>
+              <span class="certificate-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </span>
+            </div>
+            <p class="body-copy">Smart Line Formatting</p>
+          </article>
+
+          <article class="entry certificate">
+            <div class="certificate-header">
+              <div>
+                <h3 class="entry-title">Lightweight native app</h3>
+                <p class="entry-meta">~2 MB · SWIFT</p>
+              </div>
+              <span class="certificate-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </span>
+            </div>
+            <p class="body-copy">
+              Lightweight (~2 MB), native macOS experience, no login or accounts, optional native
+              app updates in signed release builds, and a fast capture-to-text workflow.
             </p>
           </article>
-        </section>
 
-        <section class="content-section section-divider">
-          <h2 class="section-title">Quick Links</h2>
-          <div class="contact-grid">
-            <span class="contact-label">GitHub</span>
-            <a class="contact-link contact-value" href="https://github.com/premsathisha/text-shot" target="_blank" rel="noreferrer">
-              /text-shot
-            </a>
-            <span class="contact-label">Releases</span>
-            <a class="contact-link contact-value" href="https://github.com/premsathisha/text-shot/releases/latest" target="_blank" rel="noreferrer">
-              /latest
-            </a>
-            <span class="contact-label">Appcast</span>
-            <a class="contact-link contact-value" href="./dist-appcast/appcast.xml">
-              /dist-appcast
-            </a>
-          </div>
-          <a class="project-link" href="./projects.html">SEE MORE</a>
+          <article class="entry section-callout">
+            <h3 class="entry-title">Who It Is For</h3>
+            <div class="skills-list" aria-label="Who Text Shot is for">
+              <span class="skill-chip">Keyboard-first macOS users</span>
+              <span class="skill-chip">Users extracting text from videos</span>
+              <span class="skill-chip">Users working from images or on-screen content</span>
+              <span class="skill-chip">Users who prefer local-first utilities</span>
+            </div>
+          </article>
+
+          <article class="entry entry-last">
+            <h3 class="entry-title">How It Works</h3>
+            <p class="entry-meta">Shortcut · Select · OCR · Clipboard</p>
+            <p class="body-copy body-copy-wide">
+              Use your keyboard shortcut to start a quick screen selection. Text Shot reads the
+              text inside that selected area, reconstructs the layout with OCR line grouping, and
+              places the result on your clipboard. You can then paste it anywhere immediately,
+              without uploading screenshot content to an external OCR service.
+            </p>
+          </article>
         </section>
 
         <section class="content-section section-divider">
