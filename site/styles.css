@@ -207,6 +207,7 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  justify-self: end;
   min-height: 42px;
   padding: 0 16px;
   border-radius: 75px;
@@ -475,6 +476,10 @@ body[data-theme="dark"] .theme-toggle-button {
   .section-header {
     grid-template-columns: 1fr;
     align-items: flex-start;
+  }
+
+  .download-button {
+    justify-self: start;
   }
 
   .contact-grid {
