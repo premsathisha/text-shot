@@ -7,6 +7,7 @@ on:
     paths:
       - "site/**"
       - "assets/screenshot.png"
+      - "assets/etagi.png"
       - "dist-appcast/**"
       - ".github/workflows/pages.yml"
 
@@ -38,7 +39,7 @@ jobs:
           mkdir -p .pages
           cp -R site/. .pages/
           mkdir -p .pages/assets
-          cp assets/screenshot.png .pages/assets/screenshot.png
+          cp assets/etagi.png .pages/assets/etagi.png
           mkdir -p .pages/dist-appcast
           cp -R dist-appcast/. .pages/dist-appcast/
           touch .pages/.nojekyll
