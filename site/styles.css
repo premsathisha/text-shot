@@ -180,11 +180,12 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
 }
 
 .section-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-24);
   margin-bottom: var(--section-space-title);
+  width: 100%;
 }
 
 .section-title {
@@ -472,8 +473,8 @@ body[data-theme="dark"] .theme-toggle-button {
   }
 
   .section-header {
+    grid-template-columns: 1fr;
     align-items: flex-start;
-    flex-direction: column;
   }
 
   .contact-grid {
