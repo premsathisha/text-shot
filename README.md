@@ -69,13 +69,7 @@ Text Shot is a native Swift menu bar app.
 
 Text Shot was built while exploring agent-assisted software development, with a GPT-5.3-Codex model. The application logic and implementation were generated through iterative prompting and system-level direction by the author, then tested in real-world usage and reviewed at a system level before release. The author assumes full responsibility for the distributed software.
 
-This project bundles KeyboardShortcuts:
-https://github.com/sindresorhus/KeyboardShortcuts
-Licensed under the MIT License.
-
-This project also integrates Sparkle for native macOS updates:
-https://sparkle-project.org/
-Licensed under the MIT License.
+This project bundles [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) and integrates [Sparkle](https://sparkle-project.org/) for native macOS updates, both licensed under the MIT License.
 
 ## Why I Built This
 
