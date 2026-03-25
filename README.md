@@ -32,7 +32,7 @@ Download the DMG from the Releases section, open it, and move Text Shot into you
 
 ## Updates
 
-Text Shot 3.0.0 is the first Sparkle-enabled release line. Builds embed the production Sparkle feed URL and public EdDSA key so the in-app update controls stay wired to the live feed, while local release packaging can stay unsigned.
+Text Shot 3.0.1 continues the first Sparkle-enabled release line. Builds embed the production Sparkle feed URL and public EdDSA key so the in-app update controls stay wired to the live feed, while local release packaging can stay unsigned.
 
 To cut a local Sparkle release:
 

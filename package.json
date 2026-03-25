@@ -1,7 +1,7 @@
 {
   "name": "text-shot",
   "productName": "Text Shot",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Fast macOS background OCR utility",
   "author": "Prem Sathisha Etagi",
   "license": "MIT",
