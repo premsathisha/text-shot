@@ -128,7 +128,6 @@ body[data-theme="dark"] .topbar-link[aria-current="page"] {
 .topbar-link:focus-visible,
 .theme-toggle-button:focus-visible,
 .contact-link:focus-visible,
-.project-link:focus-visible,
 .hero-button:focus-visible {
   outline: none;
 }
@@ -223,8 +222,7 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
 }
 
 .hero-actions,
-.hero-status,
-.skills-list {
+.hero-status {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -297,60 +295,6 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   max-width: none;
 }
 
-.entry {
-  margin-bottom: var(--section-space-block);
-}
-
-.section-callout {
-  display: grid;
-  gap: var(--space-24);
-}
-
-.entry-last {
-  margin-bottom: 0;
-}
-
-.entry-title {
-  margin: 0;
-  color: #1f1f1f;
-  font-size: 18px;
-  line-height: 1.35;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
-
-.entry-meta {
-  margin: var(--space-8) 0 var(--space-20);
-  color: var(--text-muted);
-  font-family: var(--title-font);
-  font-size: 12px;
-  line-height: 1.2;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.certificate-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.certificate-arrow {
-  flex: none;
-  color: var(--text-muted);
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  line-height: 1;
-  transition: color 180ms ease-out;
-}
-
-.certificate-arrow svg {
-  width: 100%;
-  height: 100%;
-}
-
 .skill-chip {
   display: inline-flex;
   align-items: center;
@@ -366,6 +310,19 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   font-weight: 400;
   letter-spacing: -0.03em;
   white-space: nowrap;
+}
+
+.bullet-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.9;
+  letter-spacing: -0.03em;
+}
+
+.bullet-list li::marker {
+  color: var(--text-muted);
 }
 
 .contact-grid {
@@ -402,23 +359,6 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   transition: color 180ms ease;
 }
 
-.project-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-  width: 100%;
-  margin-top: var(--space-32);
-  color: #8a8a8a;
-  font-family: var(--title-font);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-  transition: color 180ms ease;
-}
-
 .contact-link::before {
   content: "";
   width: 14px;
@@ -439,31 +379,11 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   transition: opacity 220ms ease, transform 220ms ease;
 }
 
-.project-link::before {
-  content: "";
-  order: 1;
-  width: 1.1em;
-  height: 1.1em;
-  background-color: currentColor;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-  transform-origin: center;
-}
-
 .contact-link:hover,
-.contact-link:focus-visible,
-.project-link:hover,
-.project-link:focus-visible {
+.contact-link:focus-visible {
   color: #2a2a2a;
 }
 
-body[data-theme="dark"] .entry-title,
 body[data-theme="dark"] .contact-label {
   color: var(--text-primary);
 }
@@ -476,16 +396,12 @@ body[data-theme="dark"] .footer-copy {
 
 body[data-theme="dark"] .contact-link:hover,
 body[data-theme="dark"] .contact-link:focus-visible,
-body[data-theme="dark"] .project-link:hover,
-body[data-theme="dark"] .project-link:focus-visible,
 body[data-theme="dark"] .hero-button:hover,
 body[data-theme="dark"] .hero-button:focus-visible {
   color: var(--text-primary);
 }
 
 body[data-theme="dark"] .contact-link::before,
-body[data-theme="dark"] .certificate-arrow,
-body[data-theme="dark"] .project-link,
 body[data-theme="dark"] .hero-button {
   color: var(--text-secondary);
 }
@@ -601,8 +517,7 @@ body[data-theme="dark"] .theme-toggle-button {
   }
 
   .hero-actions,
-  .hero-status,
-  .skills-list {
+  .hero-status {
     justify-content: flex-start;
   }
 
