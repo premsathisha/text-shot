@@ -6,13 +6,12 @@ cd "$ROOT_DIR"
 
 GENERATED_PATHS=(
   ".DS_Store"
+  ".generated"
   ".clang-module-cache"
   ".swiftpm-module-cache"
   "native/settings-app/.build"
-  "dist"
-  "dist-native"
+  "dist-appcast"
   "release"
-  "bin"
 )
 
 for path in "${GENERATED_PATHS[@]}"; do

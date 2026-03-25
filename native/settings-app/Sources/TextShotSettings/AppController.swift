@@ -13,6 +13,7 @@ final class AppController {
     private let launchAtLoginService: LaunchAtLoginApplying
     private let toastPresenter: ToastPresenting
     private let screenCapturePermissionService: ScreenCapturePermissionChecking
+    private let updateManager: UpdateManaging
 
     private var settingsWindowController: NSWindowController?
     private var settingsViewModel: SettingsViewModel?
@@ -29,6 +30,7 @@ final class AppController {
         launchAtLoginService: LaunchAtLoginApplying = LaunchAtLoginService(),
         toastPresenter: ToastPresenting? = nil,
         screenCapturePermissionService: ScreenCapturePermissionChecking = ScreenCapturePermissionService(),
+        updateManager: UpdateManaging? = nil,
         installStartupStateOnInit: Bool = true
     ) {
         self.settingsStore = settingsStore
@@ -39,6 +41,7 @@ final class AppController {
         self.launchAtLoginService = launchAtLoginService
         self.toastPresenter = toastPresenter ?? ToastPresenter()
         self.screenCapturePermissionService = screenCapturePermissionService
+        self.updateManager = updateManager ?? UpdateManagerFactory.make()
         self.currentSettings = settingsStore.load()
 
         hotkeyManager.onHotkeyPressed = { [weak self] in
@@ -69,6 +72,7 @@ final class AppController {
         let model = SettingsViewModel(
             initialSettings: currentSettings.editable,
             hotkeyController: hotkeyManager,
+            updateManager: updateManager,
             onApplySettings: { [weak self] editable in
                 guard let self else { return .failure(.message("Settings unavailable")) }
                 return self.saveSettings(editable)
@@ -83,7 +87,7 @@ final class AppController {
         window.title = "Settings"
         window.titleVisibility = .hidden
         window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 360, height: 188))
+        window.setContentSize(NSSize(width: 430, height: 360))
         window.center()
         window.isReleasedWhenClosed = false
 
@@ -170,12 +174,7 @@ final class AppController {
         isCaptureInFlight = true
         defer { isCaptureInFlight = false }
 
-        let hasScreenCaptureAccess: Bool
-        if screenCapturePermissionService.preflightAuthorized() {
-            hasScreenCaptureAccess = true
-        } else {
-            hasScreenCaptureAccess = screenCapturePermissionService.requestIfNeededOncePerLaunch()
-        }
+        let hasScreenCaptureAccess = await screenCapturePermissionService.ensureAuthorized()
 
         guard hasScreenCaptureAccess else {
             showScreenRecordingPromptIfNeeded()

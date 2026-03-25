@@ -1,7 +1,7 @@
 import Testing
 @testable import TextShotSettings
 
-private final class MockScreenCaptureAuthorizationAPI: ScreenCaptureAuthorizationAPI {
+private final class MockScreenCaptureAuthorizationAPI: ScreenCaptureAuthorizationAPI, @unchecked Sendable {
     var preflightResponses: [Bool]
     var requestResponse: Bool
     private(set) var requestCount = 0
@@ -53,5 +53,19 @@ func screenCapturePermissionOnlyRequestsOncePerLaunch() {
 
     #expect(service.requestIfNeededOncePerLaunch() == false)
     #expect(service.requestIfNeededOncePerLaunch() == false)
+    #expect(api.requestCount == 1)
+}
+
+@Test
+func screenCapturePermissionEnsureAuthorizedWaitsForGrantPropagation() async {
+    let api = MockScreenCaptureAuthorizationAPI(
+        preflightResponses: [false, false, true],
+        requestResponse: false
+    )
+    let service = ScreenCapturePermissionService(authorizationAPI: api)
+
+    let authorized = await service.ensureAuthorized()
+
+    #expect(authorized)
     #expect(api.requestCount == 1)
 }

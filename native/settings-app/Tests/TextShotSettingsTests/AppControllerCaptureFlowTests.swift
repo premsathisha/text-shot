@@ -57,6 +57,8 @@ private final class MockCaptureService: CaptureServing {
 private final class MockOCRService: OCRServing {
     var text: String?
     var thrownError: Error?
+    private(set) var callCount = 0
+    private(set) var receivedImagePaths: [String] = []
 
     init(text: String?, thrownError: Error? = nil) {
         self.text = text
@@ -64,6 +66,8 @@ private final class MockOCRService: OCRServing {
     }
 
     func runOcrWithRetry(imagePath: String) throws -> String? {
+        callCount += 1
+        receivedImagePaths.append(imagePath)
         if let thrownError {
             throw thrownError
         }
@@ -111,6 +115,15 @@ private final class MockScreenCapturePermissionService: ScreenCapturePermissionC
     }
 
     func requestIfNeededOncePerLaunch() -> Bool {
+        requestCount += 1
+        return requestResult
+    }
+
+    func ensureAuthorized() async -> Bool {
+        if preflightResult {
+            return true
+        }
+
         requestCount += 1
         return requestResult
     }
@@ -198,6 +211,84 @@ func appControllerCaptureToolFailureShowsCaptureFailedToast() async throws {
 
 @MainActor
 @Test
+func appControllerPermissionDeniedCaptureFailureSkipsOcrClipboardAndToast() async throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        result: CaptureResult(
+            canceled: false,
+            path: nil,
+            error: "Screen Recording permission denied.",
+            failureReason: .permissionDenied
+        )
+    )
+    let ocr = MockOCRService(text: "Should not be used")
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false
+    )
+
+    await controller.runCaptureFlow()
+
+    #expect(capture.callCount == 1)
+    #expect(ocr.callCount == 0)
+    #expect(clipboard.writes.isEmpty)
+    #expect(toast.messages.isEmpty)
+}
+
+@MainActor
+@Test
+func appControllerCanceledCaptureSkipsOcrClipboardAndToast() async throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        result: CaptureResult(canceled: true, path: nil, error: nil, failureReason: nil)
+    )
+    let ocr = MockOCRService(text: "Should not be used")
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false
+    )
+
+    await controller.runCaptureFlow()
+
+    #expect(capture.callCount == 1)
+    #expect(ocr.callCount == 0)
+    #expect(ocr.receivedImagePaths.isEmpty)
+    #expect(clipboard.writes.isEmpty)
+    #expect(toast.messages.isEmpty)
+}
+
+@MainActor
+@Test
 func appControllerAuthorizedCaptureCopiesTextAndShowsCopiedToast() async throws {
     let (store, tempDir) = try makeSettingsStore()
     defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -236,6 +327,94 @@ func appControllerAuthorizedCaptureCopiesTextAndShowsCopiedToast() async throws 
 
     #expect(clipboard.writes == ["Copied text"])
     #expect(toast.messages == ["Copied!"])
+    #expect(FileManager.default.fileExists(atPath: tempImage.path) == false)
+}
+
+@MainActor
+@Test
+func appControllerOcrEmptyResultShowsNoTextToast() async throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let tempImage = tempDir.appendingPathComponent("capture.png")
+    try Data("stub".utf8).write(to: tempImage)
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        result: CaptureResult(
+            canceled: false,
+            path: tempImage.path,
+            error: nil,
+            failureReason: nil
+        )
+    )
+    let ocr = MockOCRService(text: "")
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false
+    )
+
+    await controller.runCaptureFlow()
+
+    #expect(ocr.callCount == 1)
+    #expect(clipboard.writes.isEmpty)
+    #expect(toast.messages == ["No text"])
+    #expect(FileManager.default.fileExists(atPath: tempImage.path) == false)
+}
+
+@MainActor
+@Test
+func appControllerOcrErrorShowsErrorToast() async throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let tempImage = tempDir.appendingPathComponent("capture.png")
+    try Data("stub".utf8).write(to: tempImage)
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        result: CaptureResult(
+            canceled: false,
+            path: tempImage.path,
+            error: nil,
+            failureReason: nil
+        )
+    )
+    let ocr = MockOCRService(text: nil, thrownError: NSError(domain: "TextShotTests", code: 42))
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false
+    )
+
+    await controller.runCaptureFlow()
+
+    #expect(ocr.callCount == 1)
+    #expect(clipboard.writes.isEmpty)
+    #expect(toast.messages == ["Error"])
     #expect(FileManager.default.fileExists(atPath: tempImage.path) == false)
 }
 

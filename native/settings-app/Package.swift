@@ -10,13 +10,16 @@ let package = Package(
         .executable(name: "text-shot", targets: ["TextShotSettings"])
     ],
     dependencies: [
-        .package(path: "Vendor/KeyboardShortcuts")
+        .package(path: "Vendor/KeyboardShortcuts"),
+        .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.9.0"),
+        .package(url: "https://github.com/swiftlang/swift-testing.git", branch: "release/6.2")
     ],
     targets: [
         .executableTarget(
             name: "TextShotSettings",
             dependencies: [
-                "KeyboardShortcuts"
+                "KeyboardShortcuts",
+                .product(name: "Sparkle", package: "Sparkle")
             ],
             path: "Sources/TextShotSettings",
             linkerSettings: [
@@ -29,7 +32,10 @@ let package = Package(
         ),
         .testTarget(
             name: "TextShotSettingsTests",
-            dependencies: ["TextShotSettings"],
+            dependencies: [
+                "TextShotSettings",
+                .product(name: "Testing", package: "swift-testing")
+            ],
             path: "Tests/TextShotSettingsTests"
         )
     ]

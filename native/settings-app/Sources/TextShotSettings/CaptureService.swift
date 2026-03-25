@@ -30,28 +30,34 @@ final class CaptureService {
         let stderrPipe = Pipe()
         process.standardError = stderrPipe
 
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return CaptureResult(
-                canceled: false,
-                path: nil,
-                error: error.localizedDescription,
-                failureReason: .unexpected(message: error.localizedDescription)
-            )
+        return await withCheckedContinuation { continuation in
+            process.terminationHandler = { [output] process in
+                let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                let stderr = String(data: stderrData, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+                if process.terminationStatus == 0 && FileManager.default.fileExists(atPath: output.path) {
+                    continuation.resume(returning: CaptureResult(canceled: false, path: output.path, error: nil, failureReason: nil))
+                    return
+                }
+
+                CaptureTempStore.shared.removeCaptureFile(atPath: output.path)
+                continuation.resume(returning: self.resultForFailure(terminationStatus: process.terminationStatus, stderr: stderr))
+            }
+
+            do {
+                try process.run()
+            } catch {
+                continuation.resume(
+                    returning: CaptureResult(
+                        canceled: false,
+                        path: nil,
+                        error: error.localizedDescription,
+                        failureReason: .unexpected(message: error.localizedDescription)
+                    )
+                )
+            }
         }
-
-        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderr = String(data: stderrData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        if process.terminationStatus == 0 && FileManager.default.fileExists(atPath: output.path) {
-            return CaptureResult(canceled: false, path: output.path, error: nil, failureReason: nil)
-        }
-
-        CaptureTempStore.shared.removeCaptureFile(atPath: output.path)
-
-        return resultForFailure(terminationStatus: process.terminationStatus, stderr: stderr)
     }
 
     func resultForFailure(terminationStatus: Int32, stderr: String) -> CaptureResult {

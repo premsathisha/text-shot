@@ -20,20 +20,25 @@ final class SettingsViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var warningMessage = ""
     @Published var recorderShortcut: AppHotkeyShortcut?
+    @Published private(set) var automaticallyChecksForUpdates: Bool
 
     let hotkeyController: any HotkeyManaging & HotkeyRecorderBindingProviding
+    let updateManager: UpdateManaging
 
     private let onApplySettings: (EditableSettings) -> Result<EditableSettings, SettingsActionError>
 
     init(
         initialSettings: EditableSettings,
         hotkeyController: any HotkeyManaging & HotkeyRecorderBindingProviding,
+        updateManager: UpdateManaging,
         onApplySettings: @escaping (EditableSettings) -> Result<EditableSettings, SettingsActionError>
     ) {
         self.settings = initialSettings
         self.hotkeyController = hotkeyController
+        self.updateManager = updateManager
         self.onApplySettings = onApplySettings
         self.recorderShortcut = hotkeyController.activeShortcut
+        self.automaticallyChecksForUpdates = updateManager.automaticallyChecksForUpdates
 
         if let shortcut = hotkeyController.activeShortcut {
             var updated = settings
@@ -60,6 +65,29 @@ final class SettingsViewModel: ObservableObject {
         hotkeyController.recorderAvailabilityIssue
     }
 
+    var updateStatusMessage: String {
+        updateManager.statusDescription
+    }
+
+    var canCheckForUpdates: Bool {
+        updateManager.canCheckForUpdates
+    }
+
+    var canOpenUpdateInterface: Bool {
+        updateManager.canConfigureAutomaticChecks || updateManager.canCheckForUpdates
+    }
+
+    var canConfigureAutomaticUpdateChecks: Bool {
+        updateManager.canConfigureAutomaticChecks
+    }
+
+    var automaticUpdateChecksBinding: Binding<Bool> {
+        Binding(
+            get: { self.automaticallyChecksForUpdates },
+            set: { self.setAutomaticUpdateChecks($0) }
+        )
+    }
+
     func onRecorderError(_ message: String) {
         errorMessage = message
     }
@@ -74,6 +102,15 @@ final class SettingsViewModel: ObservableObject {
         var updated = settings
         updated.hotkey = HotkeyManager.displayString(for: shortcut)
         settings = updated
+    }
+
+    func checkForUpdates() {
+        updateManager.checkForUpdates()
+    }
+
+    private func setAutomaticUpdateChecks(_ enabled: Bool) {
+        updateManager.automaticallyChecksForUpdates = enabled
+        automaticallyChecksForUpdates = updateManager.automaticallyChecksForUpdates
     }
 
     private func updateSetting(_ transform: @escaping (inout EditableSettings, Bool) -> Void) -> (Bool) -> Void {
@@ -102,7 +139,25 @@ final class SettingsViewModel: ObservableObject {
 struct SettingsView: View {
     @EnvironmentObject private var model: SettingsViewModel
 
-    private let controlColumnWidth: CGFloat = 132
+    private let settingsWidth: CGFloat = 430
+    private let settingsHeight: CGFloat = 348
+    private let horizontalPadding: CGFloat = 18
+    private let verticalPadding: CGFloat = 14
+    private let columnSpacing: CGFloat = 12
+    private let controlColumnFraction: CGFloat = 0.34
+    private let minimumRowHeight: CGFloat = 30
+
+    private var contentWidth: CGFloat {
+        settingsWidth - (horizontalPadding * 2)
+    }
+
+    private var controlColumnWidth: CGFloat {
+        floor(contentWidth * controlColumnFraction)
+    }
+
+    private var labelColumnWidth: CGFloat {
+        contentWidth - controlColumnWidth - columnSpacing
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -121,10 +176,14 @@ struct SettingsView: View {
                 title: "Show Confirmation Pulse",
                 isOn: model.showConfirmationBinding
             )
+
+            updateActionRow
+
+            automaticUpdatesRow
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .frame(width: 360, height: 188, alignment: .topLeading)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
+        .frame(width: settingsWidth, height: settingsHeight, alignment: .topLeading)
     }
 
     private var hotkeyRow: some View {
@@ -134,7 +193,6 @@ struct SettingsView: View {
                     Text(issue)
                         .font(.system(size: 12))
                         .foregroundStyle(.red)
-                        .frame(width: controlColumnWidth, alignment: .leading)
                 } else {
                     KeyboardShortcutField(
                         hotkeyController: model.hotkeyController,
@@ -142,23 +200,22 @@ struct SettingsView: View {
                         onError: { model.onRecorderError($0) },
                         onWarning: { model.onRecorderWarning($0) }
                     )
-                    .frame(width: controlColumnWidth, height: 28, alignment: .leading)
+                    .frame(height: 28, alignment: .center)
                 }
 
                 if !model.errorMessage.isEmpty {
                     Text(model.errorMessage)
                         .font(.system(size: 12))
                         .foregroundStyle(.red)
-                        .frame(width: controlColumnWidth, alignment: .leading)
                 }
 
                 if !model.warningMessage.isEmpty {
                     Text(model.warningMessage)
                         .font(.system(size: 12))
                         .foregroundStyle(.orange)
-                        .frame(width: controlColumnWidth, alignment: .leading)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -170,17 +227,38 @@ struct SettingsView: View {
         }
     }
 
+    private var updateActionRow: some View {
+        settingsRow(title: "Updates") {
+            Button("Check for Updates...") {
+                model.checkForUpdates()
+            }
+            .disabled(!model.canOpenUpdateInterface)
+            .help(model.updateStatusMessage)
+        }
+    }
+
+    private var automaticUpdatesRow: some View {
+        settingsRow(title: "Check for Updates Automatically") {
+            Toggle("", isOn: model.automaticUpdateChecksBinding)
+                .labelsHidden()
+                .toggleStyle(.checkbox)
+                .disabled(!model.canConfigureAutomaticUpdateChecks)
+                .help(model.updateStatusMessage)
+        }
+    }
+
     private func settingsRow<Control: View>(
         title: String,
+        alignment: VerticalAlignment = .center,
         @ViewBuilder control: () -> Control
     ) -> some View {
-        HStack(alignment: .center, spacing: 0) {
+        HStack(alignment: alignment, spacing: columnSpacing) {
             Text(title)
                 .font(.system(size: 13))
-            Spacer(minLength: 28)
+                .frame(width: labelColumnWidth, alignment: .leading)
             control()
                 .frame(width: controlColumnWidth, alignment: .center)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: minimumRowHeight, alignment: .leading)
     }
 }

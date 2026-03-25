@@ -1,0 +1,33 @@
+# Manual Regression Checklist
+
+Use this checklist for hands-on verification before a release or after changes that affect capture behavior. This file is intentionally manual-only.
+
+## Screen Region Selection
+
+- Verify actual screen region selection starts and completes on the intended area.
+- Confirm the selected region matches what was highlighted on screen.
+- Re-run selection from both the hotkey and menu bar entry point.
+
+## Permissions
+
+- Verify the first-time screen recording permission prompt appears when access is missing.
+- Confirm the app recovers cleanly after permission is granted.
+- Re-check the flow after toggling permission off and back on.
+
+## Menu Bar
+
+- Confirm the menu bar item appears correctly after launch.
+- Verify the menu opens and closes normally.
+- Check that Settings and Quit behave as expected from the menu.
+
+## Multi-Display
+
+- Test selection across multiple displays.
+- Confirm the capture overlay appears on the intended display.
+- Verify OCR still works when captures originate from either display.
+
+## OCR Samples
+
+- Test printed text in screenshots, documents, and app windows.
+- Test mixed formatting such as headings, paragraphs, and short lists.
+- Test low-contrast or busy backgrounds to confirm the result is still usable.

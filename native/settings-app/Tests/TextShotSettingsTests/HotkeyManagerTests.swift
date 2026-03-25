@@ -9,6 +9,12 @@ func hotkeyManagerAllowsFunctionKeyWithoutModifiers() throws {
 }
 
 @Test
+func hotkeyManagerAllowsNilShortcut() throws {
+    try HotkeyManager.validateNoModifierRule(nil)
+    #expect(HotkeyManager.macOS15OptionGuardrailMessage(for: nil) == nil)
+}
+
+@Test
 func hotkeyManagerRejectsPrintableWithoutModifiers() {
     let shortcut = AppHotkeyShortcut(.a, modifiers: [])
 

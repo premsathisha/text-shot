@@ -2,18 +2,23 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-PROJECT_PATH="${PROJECT_PATH:-$ROOT_DIR/native/TextShotApp/TextShotApp.xcodeproj}"
-SCHEME="${SCHEME:-Text Shot}"
-CONFIGURATION="${CONFIGURATION:-Release}"
-ARCHIVE_PATH="${ARCHIVE_PATH:-$ROOT_DIR/dist-native/TextShot.xcarchive}"
-EXPORT_PATH="${EXPORT_PATH:-$ROOT_DIR/dist-native/export}"
-EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-$ROOT_DIR/build/export-options.native.plist}"
 RELEASE_DIR="${RELEASE_DIR:-$ROOT_DIR/release}"
 APP_NAME="${APP_NAME:-Text Shot}"
+GENERATED_DIR="$ROOT_DIR/.generated"
+DEFAULT_SPARKLE_FEED_URL="https://premsathisha.github.io/textshot/dist-appcast/appcast.xml"
+DEFAULT_SPARKLE_DOWNLOAD_URL_PREFIX="https://premsathisha.github.io/textshot/dist-appcast/"
+DEFAULT_SPARKLE_PUBLIC_ED_KEY="RR+P/ZV3Sse/zynriDZbZit/No5fwEVYEQf0Y33e3sc="
+SPARKLE_BIN_DIR="${SPARKLE_BIN_DIR:-}"
+SPARKLE_PUBLISH_DIR="${SPARKLE_PUBLISH_DIR:-$ROOT_DIR/dist-appcast}"
+SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
+SPARKLE_PRIVATE_ED_KEY="${SPARKLE_PRIVATE_ED_KEY:-}"
+SPARKLE_PUBLIC_ED_KEY="${SPARKLE_PUBLIC_ED_KEY:-$DEFAULT_SPARKLE_PUBLIC_ED_KEY}"
+BUILD_OUTPUT_DIR="$(mktemp -d "/tmp/text-shot-release-build.XXXXXX")"
+SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-$DEFAULT_SPARKLE_FEED_URL}"
+SPARKLE_DOWNLOAD_URL_PREFIX="${SPARKLE_DOWNLOAD_URL_PREFIX:-$DEFAULT_SPARKLE_DOWNLOAD_URL_PREFIX}"
+OFFICIAL_RELEASE="${OFFICIAL_RELEASE:-0}"
 
 BUMP_MINOR=0
-CUTOVER_1_0_0=0
 SKIP_NOTARIZE=0
 SET_VERSION=""
 
@@ -23,8 +28,7 @@ Usage: bash scripts/release-native.sh [options]
 
 Options:
   --set-version <x.y.z>         Set version explicitly
-  --bump-minor                  Legacy flag (version bump is now default)
-  --cutover-1-0-0               Set version to 1.0.0
+  --bump-minor                  Legacy flag for an intentional minor bump
   --skip-notarize               Skip notarytool submit + staple
   -h, --help                    Show this help
 USAGE
@@ -35,8 +39,81 @@ fail() {
   exit 1
 }
 
+is_https_url() {
+  [[ "$1" =~ ^https:// ]]
+}
+
+signing_identity_available() {
+  local identity="$1"
+  security find-identity -v -p codesigning 2>/dev/null | grep -Fq "$identity"
+}
+
+prepare_sparkle_publish_dir() {
+  mkdir -p "$SPARKLE_PUBLISH_DIR"
+  find "$SPARKLE_PUBLISH_DIR" -maxdepth 1 -type f \
+    \( -name "$APP_NAME-*.zip" -o -name 'appcast*.xml' \) \
+    -delete
+}
+
+validate_official_release_prereqs() {
+  [[ "$OFFICIAL_RELEASE" == "1" ]] || return 0
+
+  [[ -n "${APPLE_DEVELOPER_ID_APP:-}" ]] || fail "Official releases require APPLE_DEVELOPER_ID_APP."
+  signing_identity_available "$APPLE_DEVELOPER_ID_APP" || fail "Signing identity not available in Keychain: $APPLE_DEVELOPER_ID_APP"
+  [[ -n "$SPARKLE_PUBLIC_ED_KEY" ]] || fail "Official releases require SPARKLE_PUBLIC_ED_KEY."
+  is_https_url "$SPARKLE_FEED_URL" || fail "Official releases require an https SPARKLE_FEED_URL."
+  is_https_url "$SPARKLE_DOWNLOAD_URL_PREFIX" || fail "Official releases require an https SPARKLE_DOWNLOAD_URL_PREFIX."
+  sparkle_tools_ready || fail "Official releases require SPARKLE_BIN_DIR with generate_appcast."
+
+  if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
+    [[ -n "${APPLE_ID:-}" ]] || fail "Official notarized releases require APPLE_ID."
+    [[ -n "${APPLE_TEAM_ID:-}" ]] || fail "Official notarized releases require APPLE_TEAM_ID."
+    [[ -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]] || fail "Official notarized releases require APPLE_APP_SPECIFIC_PASSWORD."
+  fi
+}
+
+sparkle_appcast_command() {
+  if [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]]; then
+    printf '%s\n' "$SPARKLE_PRIVATE_ED_KEY" | "$SPARKLE_BIN_DIR/generate_appcast" \
+      --account "$SPARKLE_KEY_ACCOUNT" \
+      --ed-key-file - \
+      --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
+      "$SPARKLE_PUBLISH_DIR"
+    return 0
+  fi
+
+  if [[ -x "$SPARKLE_BIN_DIR/generate_keys" ]]; then
+    local temp_key_file
+    temp_key_file="$(mktemp "/tmp/text-shot-sparkle-private-key.XXXXXX")"
+    "$SPARKLE_BIN_DIR/generate_keys" --account "$SPARKLE_KEY_ACCOUNT" -x "$temp_key_file" >/dev/null
+    "$SPARKLE_BIN_DIR/generate_appcast" \
+      --account "$SPARKLE_KEY_ACCOUNT" \
+      --ed-key-file "$temp_key_file" \
+      --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
+      "$SPARKLE_PUBLISH_DIR"
+    rm -f "$temp_key_file"
+    return 0
+  fi
+
+  "$SPARKLE_BIN_DIR/generate_appcast" \
+    --account "$SPARKLE_KEY_ACCOUNT" \
+    --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
+    "$SPARKLE_PUBLISH_DIR"
+}
+
+sparkle_tools_ready() {
+  [[ -n "$SPARKLE_BIN_DIR" ]] &&
+  [[ -x "$SPARKLE_BIN_DIR/generate_appcast" ]]
+}
+
 validate_semver() {
   [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+bump_patch_version() {
+  local major minor patch
+  IFS='.' read -r major minor patch <<<"$1"
+  echo "${major}.${minor}.$((patch + 1))"
 }
 
 bump_release_version() {
@@ -69,10 +146,6 @@ while [[ $# -gt 0 ]]; do
       BUMP_MINOR=1
       shift
       ;;
-    --cutover-1-0-0)
-      CUTOVER_1_0_0=1
-      shift
-      ;;
     --skip-notarize)
       SKIP_NOTARIZE=1
       shift
@@ -91,10 +164,6 @@ if [[ "$BUMP_MINOR" -eq 1 && -n "$SET_VERSION" ]]; then
   fail "--bump-minor and --set-version cannot be combined"
 fi
 
-if [[ "$CUTOVER_1_0_0" -eq 1 && ( "$BUMP_MINOR" -eq 1 || -n "$SET_VERSION" ) ]]; then
-  fail "--cutover-1-0-0 cannot be combined with --bump-minor or --set-version"
-fi
-
 CURRENT_VERSION="$(read_package_version)"
 validate_semver "$CURRENT_VERSION" || fail "Invalid current version in package.json: $CURRENT_VERSION"
 
@@ -102,10 +171,10 @@ TARGET_VERSION="$CURRENT_VERSION"
 if [[ -n "$SET_VERSION" ]]; then
   validate_semver "$SET_VERSION" || fail "Invalid --set-version value: $SET_VERSION"
   TARGET_VERSION="$SET_VERSION"
-elif [[ "$CUTOVER_1_0_0" -eq 1 ]]; then
-  TARGET_VERSION="1.0.0"
-else
+elif [[ "$BUMP_MINOR" -eq 1 ]]; then
   TARGET_VERSION="$(bump_release_version "$CURRENT_VERSION")"
+else
+  TARGET_VERSION="$(bump_patch_version "$CURRENT_VERSION")"
 fi
 
 if [[ "$TARGET_VERSION" != "$CURRENT_VERSION" ]]; then
@@ -113,45 +182,50 @@ if [[ "$TARGET_VERSION" != "$CURRENT_VERSION" ]]; then
   set_package_version "$TARGET_VERSION"
 fi
 
-rm -rf "$ROOT_DIR/dist-native"
-mkdir -p "$ROOT_DIR/dist-native" "$RELEASE_DIR"
-
-if [[ -d "$PROJECT_PATH" ]]; then
-  [[ -f "$EXPORT_OPTIONS_PLIST" ]] || fail "Missing export options plist: $EXPORT_OPTIONS_PLIST"
-
-  xcodebuild \
-    -project "$PROJECT_PATH" \
-    -scheme "$SCHEME" \
-    -configuration "$CONFIGURATION" \
-    -archivePath "$ARCHIVE_PATH" \
-    -destination "generic/platform=macOS" \
-    clean archive
-
-  xcodebuild \
-    -exportArchive \
-    -archivePath "$ARCHIVE_PATH" \
-    -exportPath "$EXPORT_PATH" \
-    -exportOptionsPlist "$EXPORT_OPTIONS_PLIST"
-
-  APP_PATH="$(find "$EXPORT_PATH" -maxdepth 2 -type d -name "*.app" | head -n 1)"
-else
-  bash "$ROOT_DIR/scripts/build-settings-app.sh"
-  APP_PATH="$ROOT_DIR/bin/Text Shot.app"
-fi
+validate_official_release_prereqs
+mkdir -p "$RELEASE_DIR"
+OUT_DIR="$BUILD_OUTPUT_DIR" bash "$ROOT_DIR/scripts/build-settings-app.sh"
+APP_PATH="$BUILD_OUTPUT_DIR/Text Shot.app"
 
 [[ -d "$APP_PATH" ]] || fail "No app bundle found: $APP_PATH"
 
 if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
-  if [[ -n "${APPLE_ID:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
-    xcrun notarytool submit "$APP_PATH" \
-      --apple-id "$APPLE_ID" \
-      --team-id "$APPLE_TEAM_ID" \
-      --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-      --wait
+  xcrun notarytool submit "$APP_PATH" \
+    --apple-id "$APPLE_ID" \
+    --team-id "$APPLE_TEAM_ID" \
+    --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+    --wait
 
-    xcrun stapler staple "$APP_PATH"
+  xcrun stapler staple "$APP_PATH"
+fi
+
+prepare_sparkle_publish_dir
+
+SPARKLE_ARCHIVE_NAME="$APP_NAME-$TARGET_VERSION.zip"
+SPARKLE_ARCHIVE_PATH="$SPARKLE_PUBLISH_DIR/$SPARKLE_ARCHIVE_NAME"
+rm -f "$SPARKLE_ARCHIVE_PATH"
+ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$SPARKLE_ARCHIVE_PATH"
+
+if sparkle_tools_ready; then
+  if [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]]; then
+    SPARKLE_FEED_FILENAME="$(basename "$SPARKLE_FEED_URL")"
+    sparkle_appcast_command
+    if [[ "$SPARKLE_FEED_FILENAME" != "appcast.xml" && -f "$SPARKLE_PUBLISH_DIR/appcast.xml" ]]; then
+      cp -f "$SPARKLE_PUBLISH_DIR/appcast.xml" "$SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME"
+    fi
+    [[ -f "$SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME" ]] || fail "Sparkle appcast was not generated at $SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME"
   else
-    echo "Skipping notarization because Apple credentials are not set"
+    if [[ "$OFFICIAL_RELEASE" == "1" ]]; then
+      fail "Sparkle public EdDSA key is missing."
+    else
+      echo "Skipping Sparkle appcast generation because SPARKLE_PUBLIC_ED_KEY is not set"
+    fi
+  fi
+else
+  if [[ "$OFFICIAL_RELEASE" == "1" ]]; then
+    fail "Sparkle appcast generation requires SPARKLE_BIN_DIR/generate_appcast."
+  else
+    echo "Skipping Sparkle appcast generation because SPARKLE_BIN_DIR/generate_appcast is unavailable"
   fi
 fi
 
@@ -163,7 +237,7 @@ VOLUME_NAME="$APP_NAME Installer"
 mkdir -p "$STAGING_DIR"
 cleanup() {
   rm -rf "$DMG_TEMP_DIR"
-  find "$ROOT_DIR/dist-native" -maxdepth 1 -type f -name "$APP_NAME-*.dmg" -delete 2>/dev/null || true
+  rm -rf "$BUILD_OUTPUT_DIR"
 }
 trap cleanup EXIT
 
@@ -177,11 +251,13 @@ hdiutil create \
   -format UDZO \
   "$DMG_PATH"
 
-find "$RELEASE_DIR" -maxdepth 1 -type f -name "$APP_NAME-*.dmg" -delete
-find "$RELEASE_DIR" -maxdepth 1 -type f -name "$APP_NAME-*.dmg.sha256" -delete
+rm -f "$RELEASE_DIR"/"$APP_NAME"-*.dmg*
 
 cp -f "$DMG_PATH" "$RELEASE_DIR/$DMG_NAME"
 shasum -a 256 "$RELEASE_DIR/$DMG_NAME" > "$RELEASE_DIR/$DMG_NAME.sha256"
 
 echo "Release artifact ready: $RELEASE_DIR/$DMG_NAME"
 echo "Checksum ready: $RELEASE_DIR/$DMG_NAME.sha256"
+if sparkle_tools_ready; then
+  echo "Sparkle publish directory ready: $SPARKLE_PUBLISH_DIR"
+fi

@@ -301,18 +301,21 @@ extension KeyboardShortcuts.Recorder {
 	}
 }
 
-#Preview {
-	KeyboardShortcuts.Recorder("record_shortcut", name: .init("xcodePreview"))
-		.environment(\.locale, .init(identifier: "en"))
-}
+// Command-line SwiftPM builds in this repo do not load Xcode preview plugins.
+#if false
+	#Preview {
+		KeyboardShortcuts.Recorder("record_shortcut", name: .init("xcodePreview"))
+			.environment(\.locale, .init(identifier: "en"))
+	}
 
-#Preview {
-	KeyboardShortcuts.Recorder("record_shortcut", name: .init("xcodePreview"))
-		.environment(\.locale, .init(identifier: "zh-Hans"))
-}
+	#Preview {
+		KeyboardShortcuts.Recorder("record_shortcut", name: .init("xcodePreview"))
+			.environment(\.locale, .init(identifier: "zh-Hans"))
+	}
 
-#Preview {
-	KeyboardShortcuts.Recorder("record_shortcut", name: .init("xcodePreview"))
-		.environment(\.locale, .init(identifier: "ru"))
-}
+	#Preview {
+		KeyboardShortcuts.Recorder("record_shortcut", name: .init("xcodePreview"))
+			.environment(\.locale, .init(identifier: "ru"))
+	}
+#endif
 #endif

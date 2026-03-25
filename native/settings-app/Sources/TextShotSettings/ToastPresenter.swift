@@ -7,39 +7,6 @@ protocol ToastPresenting {
     func show(_ message: String)
 }
 
-private final class RoundedToastContainerView: NSView {
-    private let cornerRadius: CGFloat
-
-    init(frame frameRect: NSRect, cornerRadius: CGFloat) {
-        self.cornerRadius = cornerRadius
-        super.init(frame: frameRect)
-
-        wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
-        layer?.masksToBounds = false
-        layer?.shadowColor = NSColor.black.cgColor
-        layer?.shadowOpacity = 0.28
-        layer?.shadowRadius = 16
-        layer?.shadowOffset = CGSize(width: 0, height: -2)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func layout() {
-        super.layout()
-        let shadowPath = CGPath(
-            roundedRect: bounds,
-            cornerWidth: cornerRadius,
-            cornerHeight: cornerRadius,
-            transform: nil
-        )
-        layer?.shadowPath = shadowPath
-    }
-}
-
 private final class RoundedVisualEffectView: NSVisualEffectView {
     private let cornerRadius: CGFloat
 
@@ -117,13 +84,7 @@ final class ToastPresenter {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.ignoresMouseEvents = true
 
-        let container = RoundedToastContainerView(
-            frame: panel.contentView?.bounds ?? .zero,
-            cornerRadius: cornerRadius
-        )
-        container.autoresizingMask = [.width, .height]
-
-        let root = RoundedVisualEffectView(frame: container.bounds, cornerRadius: cornerRadius)
+        let root = RoundedVisualEffectView(frame: panel.contentView?.bounds ?? .zero, cornerRadius: cornerRadius)
         root.autoresizingMask = [.width, .height]
 
         messageLabel.font = NSFont.systemFont(ofSize: 18, weight: .semibold)
@@ -138,8 +99,7 @@ final class ToastPresenter {
             messageLabel.centerYAnchor.constraint(equalTo: root.centerYAnchor)
         ])
 
-        container.addSubview(root)
-        panel.contentView = container
+        panel.contentView = root
         panel.alphaValue = 0
     }
 
