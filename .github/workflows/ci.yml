@@ -18,6 +18,17 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Select Xcode
+        run: |
+          latest_xcode="$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -n 1)"
+          if [[ -z "$latest_xcode" ]]; then
+            echo "No Xcode installation found under /Applications" >&2
+            exit 1
+          fi
+          sudo xcode-select -s "$latest_xcode/Contents/Developer"
+          xcodebuild -version
+          swift --version
+
       - name: Install dependencies
         run: npm ci
 
