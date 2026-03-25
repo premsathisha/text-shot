@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout
@@ -20,12 +20,11 @@ jobs:
 
       - name: Select Xcode
         run: |
-          latest_xcode="$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -n 1)"
-          if [[ -z "$latest_xcode" ]]; then
-            echo "No Xcode installation found under /Applications" >&2
+          if [[ ! -d /Applications/Xcode.app ]]; then
+            echo "Expected stable Xcode at /Applications/Xcode.app" >&2
             exit 1
           fi
-          sudo xcode-select -s "$latest_xcode/Contents/Developer"
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
           swift --version
 

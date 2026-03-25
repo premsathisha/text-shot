@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(path: "Vendor/KeyboardShortcuts"),
         .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.9.0"),
-        .package(url: "https://github.com/swiftlang/swift-testing.git", branch: "release/6.2")
+        .package(url: "https://github.com/swiftlang/swift-testing.git", exact: "6.2.4")
     ],
     targets: [
         .executableTarget(
