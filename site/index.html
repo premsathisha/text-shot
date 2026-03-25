@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text Shot | Fast macOS OCR</title>
+    <meta
+      name="description"
+      content="Text Shot is a native macOS menu bar OCR utility for capturing text from any screen region with a shortcut."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./script.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Native macOS OCR utility</p>
+          <h1>Capture text from anywhere on your screen in seconds.</h1>
+          <p class="lede">
+            Text Shot lives in your menu bar, lets you draw a region, runs OCR
+            on-device, and puts the extracted text on your clipboard right away.
+          </p>
+          <div class="actions">
+            <a
+              class="button button-primary"
+              href="https://github.com/premsathisha/text-shot/releases/latest"
+            >
+              Download Latest Release
+            </a>
+            <a class="button button-secondary" href="./dist-appcast/appcast.xml">
+              View Appcast Feed
+            </a>
+          </div>
+          <div class="meta">
+            <span class="meta-pill" id="version-pill">Loading latest version...</span>
+            <span class="meta-pill">macOS 13+</span>
+            <span class="meta-pill">Local-first OCR</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <img
+            src="./assets/screenshot.png"
+            alt="Text Shot app screenshot showing a captured OCR result"
+          />
+        </div>
+      </header>
+
+      <main>
+        <section class="grid-section">
+          <article class="info-card">
+            <h2>Why use it</h2>
+            <p>
+              Text Shot is built for quick text extraction from videos, PDFs,
+              images, code samples, and UI screens without sending anything to
+              a cloud OCR service.
+            </p>
+          </article>
+          <article class="info-card">
+            <h2>How it works</h2>
+            <p>
+              Trigger the shortcut, drag over a region, let OCR reconstruct the
+              text, and paste the result wherever you need it.
+            </p>
+          </article>
+          <article class="info-card">
+            <h2>What it ships with</h2>
+            <p>
+              Native macOS UI, local OCR, menu bar controls, custom shortcut
+              support, and Sparkle-powered update delivery.
+            </p>
+          </article>
+        </section>
+
+        <section class="details">
+          <div class="detail-block">
+            <p class="section-label">Highlights</p>
+            <ul class="feature-list">
+              <li>Fast region capture from a menu bar app</li>
+              <li>OCR runs locally on your Mac</li>
+              <li>Extracted text is copied to the clipboard</li>
+              <li>Built as a native Swift app, not Electron</li>
+            </ul>
+          </div>
+          <div class="detail-block accent-block">
+            <p class="section-label">Project links</p>
+            <ul class="link-list">
+              <li><a href="https://github.com/premsathisha/text-shot">GitHub repository</a></li>
+              <li><a href="https://github.com/premsathisha/text-shot/releases/latest">Latest release</a></li>
+              <li><a href="./dist-appcast/appcast.xml">Sparkle appcast</a></li>
+            </ul>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>Text Shot is a lightweight macOS utility focused on speed, privacy, and simple keyboard-first workflows.</p>
+        <p class="footer-meta">© <span id="year"></span> Prem Sathisha Etagi</p>
+      </footer>
+    </div>
+  </body>
+</html>
