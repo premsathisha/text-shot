@@ -4,11 +4,11 @@
         <title>Text Shot</title>
         <item>
             <title>3.0.0</title>
-            <pubDate>Wed, 25 Mar 2026 00:13:30 -0700</pubDate>
+            <pubDate>Wed, 25 Mar 2026 00:24:43 -0700</pubDate>
             <sparkle:version>3.0.0</sparkle:version>
             <sparkle:shortVersionString>3.0.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://premsathisha.github.io/textshot/dist-appcast/Text%20Shot-3.0.0.zip" length="3951173" type="application/octet-stream" sparkle:edSignature="q3VO6i7Dx0oCIxH9eIDngYsq/UATT8riAzaXHu5OIqcx2q1ig0r1BmezaQifQYo41jWE27LAHLFNoIAe/pEqDQ=="/>
+            <enclosure url="https://premsathisha.github.io/text-shot/dist-appcast/Text%20Shot-3.0.0.zip" length="3951175" type="application/octet-stream" sparkle:edSignature="Nj5bHXyUjs8E1O5BLa4xaiv+A/NJTEVb4JXtZrtXEaXk1pB+pMyt+v8/t636wuIR+ZaLCl7AQAA410CIjYbxDA=="/>
         </item>
     </channel>
 </rss>

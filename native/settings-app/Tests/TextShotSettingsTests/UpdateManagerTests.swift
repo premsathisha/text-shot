@@ -44,9 +44,9 @@ private func makeInfoDictionary(feedURL: String? = nil, publicEDKey: String? = n
 @Test
 func updateConfigurationRequiresFeedAndPublicKey() {
     #expect(!UpdateConfiguration.from(infoDictionary: makeInfoDictionary()).isEnabled)
-    #expect(!UpdateConfiguration.from(infoDictionary: makeInfoDictionary(feedURL: "https://premsathisha.github.io/textshot/dist-appcast/appcast.xml")).isEnabled)
+    #expect(!UpdateConfiguration.from(infoDictionary: makeInfoDictionary(feedURL: "https://premsathisha.github.io/text-shot/dist-appcast/appcast.xml")).isEnabled)
     #expect(!UpdateConfiguration.from(infoDictionary: makeInfoDictionary(publicEDKey: "public-key")).isEnabled)
-    #expect(UpdateConfiguration.from(infoDictionary: makeInfoDictionary(feedURL: "https://premsathisha.github.io/textshot/dist-appcast/appcast.xml", publicEDKey: "public-key")).isEnabled)
+    #expect(UpdateConfiguration.from(infoDictionary: makeInfoDictionary(feedURL: "https://premsathisha.github.io/text-shot/dist-appcast/appcast.xml", publicEDKey: "public-key")).isEnabled)
 }
 
 @MainActor

@@ -19,7 +19,7 @@ APP_ICON_PNG_SRC="${APP_ICON_PNG_SRC:-$ROOT_DIR/assets/Icon-iOS-Default-1024x102
 APP_ICON_NAME="app_icon.icns"
 THIRD_PARTY_NOTICES_SRC="$ROOT_DIR/ThirdPartyNotices.txt"
 THIRD_PARTY_NOTICES_NAME="ThirdPartyNotices.txt"
-DEFAULT_SPARKLE_FEED_URL="https://premsathisha.github.io/textshot/dist-appcast/appcast.xml"
+DEFAULT_SPARKLE_FEED_URL="https://premsathisha.github.io/text-shot/dist-appcast/appcast.xml"
 DEFAULT_SPARKLE_PUBLIC_ED_KEY="RR+P/ZV3Sse/zynriDZbZit/No5fwEVYEQf0Y33e3sc="
 MODULE_CACHE_DIR="$ROOT_DIR/.swiftpm-module-cache"
 CLANG_CACHE_DIR="$ROOT_DIR/.clang-module-cache"
