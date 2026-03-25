@@ -208,6 +208,7 @@ body[data-theme="dark"] .theme-toggle-icon-dark {
   align-items: center;
   gap: 10px;
   justify-self: end;
+  margin-left: auto;
   min-height: 42px;
   padding: 0 16px;
   border-radius: 75px;
@@ -480,6 +481,7 @@ body[data-theme="dark"] .theme-toggle-button {
 
   .download-button {
     justify-self: start;
+    margin-left: 0;
   }
 
   .contact-grid {
