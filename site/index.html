@@ -8,174 +8,385 @@
       name="description"
       content="Text Shot is a lightweight macOS screenshot-to-text utility built for fast local OCR."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" type="image/png" href="./assets/etagi.png" />
-    <link rel="stylesheet" href="./styles.css?v=20260325a" />
+    <link rel="icon" type="image/png" href="./assets/Icon-iOS-Dark-1024x1024@1x.png" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --black: #090909;
+        --charcoal: #111111;
+        --surface: #161616;
+        --surface2: #1c1c1c;
+        --border: rgba(255, 255, 255, 0.06);
+        --border-strong: rgba(255, 255, 255, 0.12);
+        --text: #f0f0f0;
+        --text-muted: #787878;
+        --text-dim: #484848;
+        --accent: #5b8def;
+        --accent-dim: rgba(91, 141, 239, 0.12);
+        --accent-glow: rgba(91, 141, 239, 0.18);
+        --green: #3ecf8e;
+        --green-dim: rgba(62, 207, 142, 0.1);
+        --amber: #f0a04b;
+        --amber-dim: rgba(240, 160, 75, 0.1);
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Outfit", "DM Sans", system-ui, sans-serif;
+      }
+
+      body {
+        font-family: var(--sans);
+        background: var(--black);
+        color: var(--text);
+        font-size: 16px;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--black);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-strong);
+        border-radius: 2px;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(9, 9, 9, 0.82);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 0.5px solid var(--border);
+        padding: 0 48px;
+        height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .nav-logo {
+        font-family: var(--sans);
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-logo-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent);
+      }
+
+      .nav-logo-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .nav-badge {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 500;
+        background: var(--green-dim);
+        color: var(--green);
+        border: 0.5px solid rgba(62, 207, 142, 0.2);
+        padding: 3px 8px;
+        border-radius: 4px;
+      }
+
+      .hero {
+        padding: 52px 48px 80px;
+        max-width: 1100px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 32px;
+      }
+
+      h1.hero-headline {
+        font-size: clamp(28px, 4.5vw, 56px);
+        font-weight: 700;
+        line-height: 1.04;
+        letter-spacing: -2px;
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      h1.hero-headline .word-accent {
+        color: var(--accent);
+      }
+
+      .hero-btns {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 28px;
+        margin-bottom: 28px;
+      }
+
+      .btn-primary,
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--sans);
+        font-size: 14px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s, color 0.2s, background 0.2s;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        font-weight: 500;
+        padding: 11px 24px;
+        border: none;
+        box-shadow: 0 0 0 0 var(--accent-glow);
+      }
+
+      .btn-primary:hover {
+        box-shadow: 0 0 0 0 var(--accent-glow);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 400;
+        padding: 11px 20px;
+        border: 0.5px solid var(--border-strong);
+      }
+
+      .btn-ghost:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .btn-primary:focus-visible,
+      .btn-ghost:focus-visible,
+      .license-link:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      .hero-screenshot-placeholder {
+        width: min(1560px, calc(100vw - 96px));
+        aspect-ratio: 16 / 9;
+        background: var(--surface);
+        border: 0.5px solid var(--border-strong);
+        border-radius: 50px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      }
+
+      .hero-screenshot-placeholder img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        transform: scale(1.03);
+        transform-origin: center center;
+      }
+
+      footer {
+        background: #060606;
+        border-top: 0.5px solid var(--border);
+        padding: 32px 48px;
+        margin-top: 40px;
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .footer-meta {
+        font-size: 12px;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .footer-sep {
+        color: var(--text-dim);
+        opacity: 0.4;
+      }
+
+      .footer-copyright {
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      .license-link {
+        transition: color 0.2s, text-shadow 0.2s, transform 0.2s;
+      }
+
+      .license-link:hover {
+        color: var(--text);
+        text-shadow: 0 0 18px var(--accent-glow);
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        nav {
+          padding: 0 20px;
+        }
+
+        .hero {
+          padding: 32px 20px 60px;
+        }
+
+        h1.hero-headline {
+          white-space: normal;
+        }
+
+        .hero-screenshot-placeholder {
+          width: 100%;
+          aspect-ratio: 16 / 10;
+        }
+
+        footer {
+          padding: 28px 20px;
+        }
+      }
+    </style>
   </head>
-  <body class="text-shot-home">
-    <script>
-      (function () {
-        const storageKey = "prem-website-theme";
-        const storedTheme = window.localStorage.getItem(storageKey);
-        const theme =
-          storedTheme === "light" || storedTheme === "dark"
-            ? storedTheme
-            : window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
+  <body>
+    <nav>
+      <a class="nav-logo" href="./index.html">
+        <div class="nav-logo-icon">
+          <img src="./assets/Icon-iOS-Dark-1024x1024@1x.png" alt="Text Shot app icon" />
+        </div>
+        Text Shot
+      </a>
+      <span class="nav-badge" id="release-badge">v3.0.1</span>
+    </nav>
 
-        document.body.dataset.theme = theme;
-      })();
-    </script>
-    <div class="page-shell">
-      <div class="resume-sheet">
-        <header class="topbar section-divider">
-          <nav class="topbar-nav" aria-label="Primary">
-            <a class="topbar-link is-active" href="./index.html" aria-current="page">Text Shot</a>
-          </nav>
-          <div class="topbar-actions">
-            <button class="theme-toggle-button" id="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
-              <span class="theme-toggle-icon theme-toggle-icon-light" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                  <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
-                </svg>
-              </span>
-              <span class="theme-toggle-icon theme-toggle-icon-dark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="m4.93 4.93 1.41 1.41" />
-                  <path d="m17.66 17.66 1.41 1.41" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="m6.34 17.66-1.41 1.41" />
-                  <path d="m19.07 4.93-1.41 1.41" />
-                </svg>
-              </span>
-            </button>
-          </div>
-        </header>
-
-        <section class="content-section section-divider">
-          <div class="section-header">
-            <h2 class="section-title section-title-main">Text Shot</h2>
-            <a
-              class="download-button"
-              id="download-button"
-              href="#"
-              aria-label="Download Text Shot for macOS"
-            >
-              <span>Download for macOS</span>
-              <span class="download-button-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 17V3"></path>
-                  <path d="m6 11 6 6 6-6"></path>
-                  <path d="M19 21H5"></path>
-                </svg>
-              </span>
-            </a>
-          </div>
-          <p class="body-copy body-copy-wide">
-            Text Shot is a lightweight macOS screenshot-to-text utility that lets you capture any
-            screen region and instantly extract text using on-device OCR. It runs entirely
-            on-device for OCR and is built for speed, simplicity, and keyboard-driven workflows. It
-            requires macOS Screen Recording permission to capture selected regions, collects no
-            data, and needs no account.
-          </p>
-        </section>
-
-        <section class="content-section section-divider">
-          <h2 class="section-title">Key Features</h2>
-          <ul class="bullet-list">
-            <li>Fully local OCR processing</li>
-            <li>Smart Line Formatting</li>
-            <li>Lightweight (~8 MB)</li>
-            <li>Native macOS experience</li>
-            <li>No login or accounts</li>
-            <li>Optional native app updates in signed release builds</li>
-            <li>Fast capture-to-text workflow</li>
-          </ul>
-        </section>
-
-        <section class="content-section section-divider">
-          <h2 class="section-title">Who It Is For</h2>
-          <ul class="bullet-list">
-            <li>Keyboard-first macOS users</li>
-            <li>Users who extract text from videos, images, or on-screen content</li>
-            <li>Users who prefer local-first utilities</li>
-          </ul>
-        </section>
-
-        <section class="content-section section-divider">
-          <h2 class="section-title">How It Works</h2>
-          <p class="body-copy body-copy-wide">
-            Use your keyboard shortcut to start a quick screen selection. Text Shot reads the text
-            inside that selected area, reconstructs the layout with OCR line grouping, and places
-            the result on your clipboard. You can then paste it anywhere immediately, without
-            uploading screenshot content to an external OCR service.
-          </p>
-        </section>
-
-        <section class="content-section section-divider">
-          <h2 class="section-title">Installation</h2>
-          <p class="body-copy body-copy-wide">
-            Download the DMG from the Releases section, open it, and move Text Shot into your
-            Applications folder. Launch the app, grant the required permissions, set your preferred
-            shortcut (default: Cmd + Shift + 2), and start capturing text.
-          </p>
-        </section>
-
-        <section class="content-section section-divider">
-          <h2 class="section-title">CONTACT</h2>
-          <div class="contact-grid">
-            <span class="contact-label">Email</span>
-            <a
-              class="contact-link contact-value"
-              href="https://mail.google.com/mail/?view=cm&fs=1&to=work.prem.sathisha@gmail.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              work.prem.sathisha@gmail.com
-            </a>
-            <span class="contact-label">LinkedIn</span>
-            <a
-              class="contact-link contact-value"
-              href="https://www.linkedin.com/in/premsathisha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              /in/premsathisha
-            </a>
-            <span class="contact-label">GitHub</span>
-            <a
-              class="contact-link contact-value"
-              href="https://github.com/premsathisha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              /profile
-            </a>
-          </div>
-        </section>
-
-        <footer class="footer">
-          <p class="footer-copy">Copyright © 2026 Prem Sathisha Etagi. All Rights Reserved.</p>
-          <div class="footer-time" aria-live="polite">
-            <span class="footer-time-icon" aria-hidden="true">
-              <svg id="footer-time-icon-svg" viewBox="0 0 24 24" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></svg>
-            </span>
-            <span id="mst-time">16:20 MST</span>
-          </div>
-        </footer>
+    <div class="hero">
+      <h1 class="hero-headline">
+        Capture text from anywhere. <span class="word-accent">Instantly.</span>
+      </h1>
+      <div class="hero-btns">
+        <a class="btn-primary" id="download-button" href="https://github.com/premsathisha/text-shot/releases/latest">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Download for macOS
+        </a>
+        <a class="btn-ghost" href="https://github.com/premsathisha/text-shot" target="_blank" rel="noreferrer">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M4 5h5M4 7.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          View Docs
+        </a>
+      </div>
+      <div class="hero-screenshot-placeholder">
+        <img src="./assets/screenshot.png?v=20260328b" alt="Text Shot screenshot" />
       </div>
     </div>
 
-    <script src="./script.js?v=20260325a"></script>
+    <footer>
+      <div class="footer-inner">
+        <span class="footer-copyright">Copyright &copy; 2026 Prem Sathisha Etagi. All Rights Reserved.</span>
+        <div class="footer-meta">
+          <a
+            class="license-link"
+            href="https://github.com/premsathisha/text-shot/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+          >
+            MIT License
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        const downloadButton = document.getElementById("download-button");
+        const releaseBadge = document.getElementById("release-badge");
+        const fallbackUrl = "https://github.com/premsathisha/text-shot/releases/latest";
+
+        async function wireLatestRelease() {
+          try {
+            const response = await fetch(
+              "https://api.github.com/repos/premsathisha/text-shot/releases/latest",
+              {
+                headers: { Accept: "application/vnd.github+json" },
+                cache: "no-store",
+              },
+            );
+
+            if (!response.ok) {
+              throw new Error("Failed to fetch latest release");
+            }
+
+            const release = await response.json();
+            const dmgAsset = Array.isArray(release.assets)
+              ? release.assets.find((asset) => typeof asset.name === "string" && /\.dmg$/i.test(asset.name))
+              : null;
+
+            if (release.tag_name) {
+              releaseBadge.textContent = release.tag_name;
+            }
+
+            if (dmgAsset && dmgAsset.browser_download_url) {
+              downloadButton.href = dmgAsset.browser_download_url;
+              downloadButton.setAttribute("download", dmgAsset.name);
+            } else if (release.html_url) {
+              downloadButton.href = release.html_url;
+            } else {
+              downloadButton.href = fallbackUrl;
+            }
+          } catch (error) {
+            downloadButton.href = fallbackUrl;
+            console.error("Unable to load latest release", error);
+          }
+        }
+
+        wireLatestRelease();
+      })();
+    </script>
   </body>
 </html>
