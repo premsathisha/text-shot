@@ -4,7 +4,45 @@ import KeyboardShortcuts
 import SwiftUI
 
 @MainActor
+private final class SettingsWindowController: NSWindowController, NSWindowDelegate {
+    private let onClose: @MainActor () -> Void
+
+    init(rootView: AnyView, onClose: @escaping @MainActor () -> Void) {
+        self.onClose = onClose
+
+        let hosting = NSHostingController(rootView: rootView)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 430, height: 360),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentViewController = hosting
+        window.title = "Settings"
+        window.titleVisibility = .hidden
+        window.setContentSize(NSSize(width: 430, height: 360))
+        window.center()
+        window.isReleasedWhenClosed = false
+
+        super.init(window: window)
+
+        window.delegate = self
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        onClose()
+    }
+}
+
+@MainActor
 final class AppController {
+    typealias SettingsWindowControllerFactory = @MainActor (SettingsViewModel, @escaping @MainActor () -> Void) -> NSWindowController
+
     private let settingsStore: SettingsStoreV2
     private let hotkeyManager: any HotkeyManaging & HotkeyRecorderBindingProviding
     private let captureService: CaptureServing
@@ -14,12 +52,16 @@ final class AppController {
     private let toastPresenter: ToastPresenting
     private let screenCapturePermissionService: ScreenCapturePermissionChecking
     private let updateManager: UpdateManaging
+    private let settingsWindowControllerFactory: SettingsWindowControllerFactory
+    private let captureActivationDelayNanoseconds: UInt64
+    private let captureRetryActivationDelayNanoseconds: UInt64
 
     private var settingsWindowController: NSWindowController?
     private var settingsViewModel: SettingsViewModel?
     private var currentSettings: AppSettingsV2
     private var lastCopiedText = ""
     private var isCaptureInFlight = false
+    private var hasCompletedInitialCaptureAttempt = false
 
     init(
         settingsStore: SettingsStoreV2,
@@ -31,7 +73,10 @@ final class AppController {
         toastPresenter: ToastPresenting? = nil,
         screenCapturePermissionService: ScreenCapturePermissionChecking = ScreenCapturePermissionService(),
         updateManager: UpdateManaging? = nil,
-        installStartupStateOnInit: Bool = true
+        installStartupStateOnInit: Bool = true,
+        captureActivationDelayNanoseconds: UInt64 = 150_000_000,
+        captureRetryActivationDelayNanoseconds: UInt64 = 300_000_000,
+        settingsWindowControllerFactory: @escaping SettingsWindowControllerFactory = AppController.makeSettingsWindowController
     ) {
         self.settingsStore = settingsStore
         self.hotkeyManager = hotkeyManager
@@ -42,6 +87,9 @@ final class AppController {
         self.toastPresenter = toastPresenter ?? ToastPresenter()
         self.screenCapturePermissionService = screenCapturePermissionService
         self.updateManager = updateManager ?? UpdateManagerFactory.make()
+        self.settingsWindowControllerFactory = settingsWindowControllerFactory
+        self.captureActivationDelayNanoseconds = captureActivationDelayNanoseconds
+        self.captureRetryActivationDelayNanoseconds = captureRetryActivationDelayNanoseconds
         self.currentSettings = settingsStore.load()
 
         hotkeyManager.onHotkeyPressed = { [weak self] in
@@ -80,20 +128,14 @@ final class AppController {
         )
         settingsViewModel = model
 
-        let contentView = SettingsView().environmentObject(model)
-        let hosting = NSHostingController(rootView: contentView)
-
-        let window = NSWindow(contentViewController: hosting)
-        window.title = "Settings"
-        window.titleVisibility = .hidden
-        window.styleMask = [.titled, .closable, .miniaturizable]
-        window.setContentSize(NSSize(width: 430, height: 360))
-        window.center()
-        window.isReleasedWhenClosed = false
-
-        let controller = NSWindowController(window: window)
+        let controller = settingsWindowControllerFactory(model) { [weak self] in
+            guard let self else { return }
+            self.settingsWindowController = nil
+            self.settingsViewModel = nil
+        }
         settingsWindowController = controller
         controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -106,6 +148,10 @@ final class AppController {
     @discardableResult
     func applyShortcutForTesting(_ shortcut: AppHotkeyShortcut?) -> Result<AppHotkeyShortcut?, SettingsActionError> {
         applyHotkeyFromSettings(shortcut)
+    }
+
+    func isSettingsWindowOpenForTesting() -> Bool {
+        settingsWindowController != nil
     }
 
     private func installStartupState() {
@@ -181,7 +227,17 @@ final class AppController {
             return
         }
 
-        let capture = await captureService.captureRegion()
+        let isInitialCaptureAttempt = !hasCompletedInitialCaptureAttempt
+        defer { hasCompletedInitialCaptureAttempt = true }
+
+        await prepareForInteractiveCapture(delayNanoseconds: captureActivationDelayNanoseconds)
+        var capture = await captureService.captureRegion()
+
+        if shouldRetryCapture(result: capture, isInitialCaptureAttempt: isInitialCaptureAttempt) {
+            await prepareForInteractiveCapture(delayNanoseconds: captureRetryActivationDelayNanoseconds)
+            capture = await captureService.captureRegion()
+        }
+
         if capture.canceled {
             return
         }
@@ -216,5 +272,42 @@ final class AppController {
         } catch {
             showToastIfEnabled("Error")
         }
+    }
+
+    private func prepareForInteractiveCapture(delayNanoseconds: UInt64) async {
+        NSApp.activate(ignoringOtherApps: true)
+        NSRunningApplication.current.activate(options: [.activateIgnoringOtherApps])
+
+        if delayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: delayNanoseconds)
+        }
+    }
+
+    private func shouldRetryCapture(result: CaptureResult, isInitialCaptureAttempt: Bool) -> Bool {
+        guard isInitialCaptureAttempt, !result.canceled, result.path == nil else {
+            return false
+        }
+
+        switch result.failureReason {
+        case .permissionDenied:
+            return false
+        case .toolFailed(let message):
+            let normalized = message.lowercased()
+            return normalized.contains("failed to create image")
+        case .unexpected(let message):
+            return message.contains("exit code 2")
+        case nil:
+            return false
+        }
+    }
+
+    private static func makeSettingsWindowController(
+        model: SettingsViewModel,
+        onClose: @escaping @MainActor () -> Void
+    ) -> NSWindowController {
+        SettingsWindowController(
+            rootView: AnyView(SettingsView().environmentObject(model)),
+            onClose: onClose
+        )
     }
 }

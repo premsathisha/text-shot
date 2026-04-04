@@ -3,7 +3,6 @@ import Foundation
 
 protocol ScreenCapturePermissionChecking {
     func preflightAuthorized() -> Bool
-    func requestIfNeededOncePerLaunch() -> Bool
     func ensureAuthorized() async -> Bool
 }
 
@@ -35,27 +34,6 @@ final class ScreenCapturePermissionService: ScreenCapturePermissionChecking {
         authorizationAPI.preflight()
     }
 
-    func requestIfNeededOncePerLaunch() -> Bool {
-        if authorizationAPI.preflight() {
-            return true
-        }
-
-        let shouldRequest = stateQueue.sync { () -> Bool in
-            guard !didRequestThisLaunch else {
-                return false
-            }
-
-            didRequestThisLaunch = true
-            return true
-        }
-
-        guard shouldRequest else {
-            return false
-        }
-
-        return authorizationAPI.request()
-    }
-
     func ensureAuthorized() async -> Bool {
         if preflightAuthorized() {
             return true
@@ -74,8 +52,8 @@ final class ScreenCapturePermissionService: ScreenCapturePermissionChecking {
             return false
         }
 
-        if await requestAccessOffMainThread() {
-            return true
+        guard await requestAccessOffMainThread() else {
+            return false
         }
 
         return await waitForAuthorizationPropagation()

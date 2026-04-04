@@ -6,7 +6,9 @@ Use this checklist for hands-on verification before a release or after changes t
 
 - Verify actual screen region selection starts and completes on the intended area.
 - Confirm the selected region matches what was highlighted on screen.
+- Launch the app fresh and verify the first capture works from the hotkey.
 - Re-run selection from both the hotkey and menu bar entry point.
+- Verify a failed first capture does not leave the hotkey path stuck.
 
 ## Permissions
 
@@ -19,6 +21,8 @@ Use this checklist for hands-on verification before a release or after changes t
 - Confirm the menu bar item appears correctly after launch.
 - Verify the menu opens and closes normally.
 - Check that Settings and Quit behave as expected from the menu.
+- Open `Settings...`, close it, and reopen it multiple times without the app quitting.
+- Confirm the settings window comes to the front when it is already open.
 
 ## Multi-Display
 

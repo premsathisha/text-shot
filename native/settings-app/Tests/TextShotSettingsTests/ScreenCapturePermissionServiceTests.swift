@@ -28,36 +28,50 @@ private final class MockScreenCaptureAuthorizationAPI: ScreenCaptureAuthorizatio
 }
 
 @Test
-func screenCapturePermissionPreflightTrueDoesNotRequest() {
+func screenCapturePermissionPreflightTrueDoesNotRequest() async {
     let api = MockScreenCaptureAuthorizationAPI(preflightResponses: [true, true], requestResponse: false)
     let service = ScreenCapturePermissionService(authorizationAPI: api)
 
     #expect(service.preflightAuthorized())
-    #expect(service.requestIfNeededOncePerLaunch())
+    #expect(await service.ensureAuthorized())
     #expect(api.requestCount == 0)
 }
 
 @Test
-func screenCapturePermissionFirstRequestReturnsDenied() {
+func screenCapturePermissionFirstRequestReturnsDenied() async {
     let api = MockScreenCaptureAuthorizationAPI(preflightResponses: [false], requestResponse: false)
     let service = ScreenCapturePermissionService(authorizationAPI: api)
 
-    #expect(service.requestIfNeededOncePerLaunch() == false)
+    #expect(await service.ensureAuthorized() == false)
     #expect(api.requestCount == 1)
 }
 
 @Test
-func screenCapturePermissionOnlyRequestsOncePerLaunch() {
+func screenCapturePermissionOnlyRequestsOncePerLaunch() async {
     let api = MockScreenCaptureAuthorizationAPI(preflightResponses: [false, false, false], requestResponse: false)
     let service = ScreenCapturePermissionService(authorizationAPI: api)
 
-    #expect(service.requestIfNeededOncePerLaunch() == false)
-    #expect(service.requestIfNeededOncePerLaunch() == false)
+    #expect(await service.ensureAuthorized() == false)
+    #expect(await service.ensureAuthorized() == false)
     #expect(api.requestCount == 1)
 }
 
 @Test
 func screenCapturePermissionEnsureAuthorizedWaitsForGrantPropagation() async {
+    let api = MockScreenCaptureAuthorizationAPI(
+        preflightResponses: [false, false, true],
+        requestResponse: true
+    )
+    let service = ScreenCapturePermissionService(authorizationAPI: api)
+
+    let authorized = await service.ensureAuthorized()
+
+    #expect(authorized)
+    #expect(api.requestCount == 1)
+}
+
+@Test
+func screenCapturePermissionDeniedRequestDoesNotWaitForPropagation() async {
     let api = MockScreenCaptureAuthorizationAPI(
         preflightResponses: [false, false, true],
         requestResponse: false
@@ -66,6 +80,6 @@ func screenCapturePermissionEnsureAuthorizedWaitsForGrantPropagation() async {
 
     let authorized = await service.ensureAuthorized()
 
-    #expect(authorized)
+    #expect(authorized == false)
     #expect(api.requestCount == 1)
 }

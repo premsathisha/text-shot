@@ -16,8 +16,7 @@ func settingsMigratorImportsV2SettingsIntoV3() throws {
         "schemaVersion": 2,
         "hotkey": "Control+Alt+K",
         "showConfirmation": false,
-        "launchAtLogin": true,
-        "lastPermissionPromptAt": 10,
+        "launchAtLogin": true
     ]
 
     let data = try JSONSerialization.data(withJSONObject: legacyPayload, options: [])
@@ -30,7 +29,6 @@ func settingsMigratorImportsV2SettingsIntoV3() throws {
     #expect(loaded.hotkey == "Control+Alt+K")
     #expect(loaded.showConfirmation == false)
     #expect(loaded.launchAtLogin)
-    #expect(loaded.lastPermissionPromptAt == 10)
     #expect(loaded.schemaVersion == AppSettingsV2.schemaVersionValue)
 
     #expect(FileManager.default.fileExists(atPath: tempDir.appendingPathComponent("Text Shot/.migration-v3-done").path))

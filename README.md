@@ -56,6 +56,43 @@ For developers who want to build Text Shot locally.
 - `release/`: latest DMG and `.sha256` only
 - `TESTING.md`: manual regression checklist for capture, permissions, menu bar behavior, multi-display, and OCR samples
 
+## Contributing
+
+Keep changes aligned with the native Swift menu bar app and the release rules in `AGENTS.md`.
+
+- Create branches with the `codex/` prefix unless a different branch name is intentionally required.
+- Keep commits focused and descriptive so release notes and bug history stay readable.
+- Run `npm run typecheck` and `npm test` before opening a pull request.
+- If the change affects packaging or user-facing behavior, also run the relevant manual checks in `TESTING.md`.
+- Every DMG release must bump the version, keep `package.json` aligned, and leave only the latest DMG and checksum in `release/`.
+
+GitHub Actions already enforces the baseline native checks on macOS for pull requests and pushes.
+
+## Troubleshooting
+
+### Screen Recording permission
+
+Text Shot needs macOS Screen Recording permission before capture can begin.
+
+- Open `System Settings > Privacy & Security > Screen Recording`.
+- Enable Text Shot, then fully quit and relaunch the app.
+- If capture still fails, remove the permission entry, relaunch Text Shot, and grant permission again when macOS prompts.
+
+### Hotkey does not open the capture overlay
+
+If the global shortcut does not present the selection overlay immediately after launch:
+
+- Open Text Shot once from the menu bar and confirm the shortcut shown in `Settings...`.
+- Trigger the shortcut again after the app is frontmost.
+- If the shortcut was changed recently, reopen `Settings...` and re-record it.
+- If the issue persists, quit and relaunch the app so macOS refreshes the menu bar app state and hotkey registration.
+
+### Settings window does not appear
+
+- Open `Settings...` from the menu bar item instead of relying on `Cmd+,` alone.
+- If nothing appears, quit Text Shot and relaunch it from `/Applications` or from the freshly built app bundle.
+- Re-test after rebuilding with `npm run build` if you are working locally from source.
+
 ## Architecture
 
 Text Shot is a native Swift menu bar app.

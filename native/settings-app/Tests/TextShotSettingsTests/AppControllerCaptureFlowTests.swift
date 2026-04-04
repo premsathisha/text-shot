@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import KeyboardShortcuts
 import Testing
 @testable import TextShotSettings
@@ -41,16 +42,24 @@ private final class MockHotkeyController: HotkeyManaging, HotkeyRecorderBindingP
 }
 
 private final class MockCaptureService: CaptureServing {
-    var result: CaptureResult
+    var results: [CaptureResult]
     private(set) var callCount = 0
 
     init(result: CaptureResult) {
-        self.result = result
+        self.results = [result]
+    }
+
+    init(results: [CaptureResult]) {
+        self.results = results
     }
 
     func captureRegion() async -> CaptureResult {
         callCount += 1
-        return result
+        if results.count > 1 {
+            return results.removeFirst()
+        }
+
+        return results[0]
     }
 }
 
@@ -114,11 +123,6 @@ private final class MockScreenCapturePermissionService: ScreenCapturePermissionC
         preflightResult
     }
 
-    func requestIfNeededOncePerLaunch() -> Bool {
-        requestCount += 1
-        return requestResult
-    }
-
     func ensureAuthorized() async -> Bool {
         if preflightResult {
             return true
@@ -134,6 +138,30 @@ private func makeSettingsStore() throws -> (SettingsStoreV2, URL) {
     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
     let fileURL = tempDir.appendingPathComponent("settings-v3.json")
     return (SettingsStoreV2(fileURL: fileURL), tempDir)
+}
+
+@MainActor
+private final class TestSettingsWindowController: NSWindowController {
+    private let onClose: @MainActor () -> Void
+    private(set) var showWindowCallCount = 0
+
+    init(onClose: @escaping @MainActor () -> Void) {
+        self.onClose = onClose
+        super.init(window: NSWindow())
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override func showWindow(_ sender: Any?) {
+        showWindowCallCount += 1
+    }
+
+    func simulateClose() {
+        onClose()
+    }
 }
 
 @MainActor
@@ -173,6 +201,60 @@ func appControllerDeniedPreflightSkipsCapture() async throws {
 
 @MainActor
 @Test
+func appControllerReusesOpenSettingsWindowAndRecreatesAfterClose() throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        result: CaptureResult(canceled: true, path: nil, error: nil, failureReason: nil)
+    )
+    let ocr = MockOCRService(text: nil)
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+    var createdControllers: [TestSettingsWindowController] = []
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false,
+        captureActivationDelayNanoseconds: 0,
+        captureRetryActivationDelayNanoseconds: 0,
+        settingsWindowControllerFactory: { _, onClose in
+            let testController = TestSettingsWindowController(onClose: onClose)
+            createdControllers.append(testController)
+            return testController
+        }
+    )
+
+    controller.openSettings()
+    controller.openSettings()
+
+    #expect(createdControllers.count == 1)
+    #expect(createdControllers[0].showWindowCallCount == 1)
+    #expect(controller.isSettingsWindowOpenForTesting())
+
+    createdControllers[0].simulateClose()
+
+    #expect(controller.isSettingsWindowOpenForTesting() == false)
+
+    controller.openSettings()
+
+    #expect(createdControllers.count == 2)
+    #expect(createdControllers[1].showWindowCallCount == 1)
+    #expect(controller.isSettingsWindowOpenForTesting())
+}
+
+@MainActor
+@Test
 func appControllerCaptureToolFailureShowsCaptureFailedToast() async throws {
     let (store, tempDir) = try makeSettingsStore()
     defer { try? FileManager.default.removeItem(at: tempDir) }
@@ -206,6 +288,104 @@ func appControllerCaptureToolFailureShowsCaptureFailedToast() async throws {
 
     await controller.runCaptureFlow()
 
+    #expect(toast.messages == ["Capture failed"])
+}
+
+@MainActor
+@Test
+func appControllerInitialCaptureFailureRetriesOnceAndSucceeds() async throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let tempImage = tempDir.appendingPathComponent("capture.png")
+    try Data("stub".utf8).write(to: tempImage)
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        results: [
+            CaptureResult(
+                canceled: false,
+                path: nil,
+                error: "screencapture failed with exit code 2",
+                failureReason: .unexpected(message: "screencapture failed with exit code 2")
+            ),
+            CaptureResult(
+                canceled: false,
+                path: tempImage.path,
+                error: nil,
+                failureReason: nil
+            )
+        ]
+    )
+    let ocr = MockOCRService(text: "Recovered text")
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false,
+        captureActivationDelayNanoseconds: 0,
+        captureRetryActivationDelayNanoseconds: 0
+    )
+
+    await controller.runCaptureFlow()
+
+    #expect(capture.callCount == 2)
+    #expect(clipboard.writes == ["Recovered text"])
+    #expect(toast.messages == ["Copied!"])
+}
+
+@MainActor
+@Test
+func appControllerRetryOnlyAppliesToInitialCaptureAttempt() async throws {
+    let (store, tempDir) = try makeSettingsStore()
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let hotkeys = MockHotkeyController()
+    let capture = MockCaptureService(
+        results: [
+            CaptureResult(canceled: true, path: nil, error: nil, failureReason: nil),
+            CaptureResult(
+                canceled: false,
+                path: nil,
+                error: "screencapture failed with exit code 2",
+                failureReason: .unexpected(message: "screencapture failed with exit code 2")
+            )
+        ]
+    )
+    let ocr = MockOCRService(text: nil)
+    let clipboard = MockClipboardService()
+    let launch = MockLaunchAtLoginService()
+    let toast = MockToastPresenter()
+    let screenPerms = MockScreenCapturePermissionService(preflightResult: true, requestResult: true)
+
+    let controller = AppController(
+        settingsStore: store,
+        hotkeyManager: hotkeys,
+        captureService: capture,
+        ocrService: ocr,
+        clipboardService: clipboard,
+        launchAtLoginService: launch,
+        toastPresenter: toast,
+        screenCapturePermissionService: screenPerms,
+        installStartupStateOnInit: false,
+        captureActivationDelayNanoseconds: 0,
+        captureRetryActivationDelayNanoseconds: 0
+    )
+
+    await controller.runCaptureFlow()
+    await controller.runCaptureFlow()
+
+    #expect(capture.callCount == 2)
     #expect(toast.messages == ["Capture failed"])
 }
 

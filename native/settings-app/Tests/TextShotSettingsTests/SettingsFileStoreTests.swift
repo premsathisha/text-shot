@@ -12,7 +12,7 @@ func settingsStoreRoundTripPreservesCurrentFields() throws {
     let store = SettingsStoreV2(fileURL: fileURL)
 
     var initial = AppSettingsV2.defaults
-    initial.lastPermissionPromptAt = 111
+    initial.hotkey = "⇧⌘4"
     _ = try store.save(initial)
 
     let saved = try store.update { settings in
@@ -24,7 +24,6 @@ func settingsStoreRoundTripPreservesCurrentFields() throws {
     #expect(saved.hotkey == "Control+Alt+K")
     #expect(saved.launchAtLogin)
     #expect(saved.showConfirmation == false)
-    #expect(saved.lastPermissionPromptAt == 111)
     #expect(saved.schemaVersion == AppSettingsV2.schemaVersionValue)
 
     let reread = store.load()

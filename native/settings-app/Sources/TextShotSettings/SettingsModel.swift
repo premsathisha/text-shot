@@ -5,7 +5,6 @@ struct AppSettingsV2: Codable, Equatable {
     var hotkey: String
     var showConfirmation: Bool
     var launchAtLogin: Bool
-    var lastPermissionPromptAt: Int
 
     static let schemaVersionValue = 3
 
@@ -13,8 +12,7 @@ struct AppSettingsV2: Codable, Equatable {
         schemaVersion: schemaVersionValue,
         hotkey: "⇧⌘2",
         showConfirmation: true,
-        launchAtLogin: false,
-        lastPermissionPromptAt: 0
+        launchAtLogin: false
     )
 }
 
@@ -150,8 +148,7 @@ struct SettingsMigrator {
                 schemaVersion: AppSettingsV2.schemaVersionValue,
                 hotkey: readString(payload, "hotkey") ?? AppSettingsV2.defaults.hotkey,
                 showConfirmation: readBool(payload, "showConfirmation") ?? AppSettingsV2.defaults.showConfirmation,
-                launchAtLogin: readBool(payload, "launchAtLogin") ?? AppSettingsV2.defaults.launchAtLogin,
-                lastPermissionPromptAt: readInt(payload, "lastPermissionPromptAt") ?? 0
+                launchAtLogin: readBool(payload, "launchAtLogin") ?? AppSettingsV2.defaults.launchAtLogin
             )
         }
 
@@ -181,17 +178,5 @@ struct SettingsMigrator {
 
     private func readBool(_ payload: [String: Any], _ key: String) -> Bool? {
         payload[key] as? Bool
-    }
-
-    private func readInt(_ payload: [String: Any], _ key: String) -> Int? {
-        if let intValue = payload[key] as? Int {
-            return intValue
-        }
-
-        if let number = payload[key] as? NSNumber {
-            return number.intValue
-        }
-
-        return nil
     }
 }

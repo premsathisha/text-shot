@@ -43,6 +43,24 @@ is_https_url() {
   [[ "$1" =~ ^https:// ]]
 }
 
+resolve_sparkle_bin_dir() {
+  local candidate
+
+  for candidate in \
+    "$SPARKLE_BIN_DIR" \
+    "$ROOT_DIR/native/settings-app/.build/artifacts/sparkle/Sparkle/bin" \
+    "/Applications/Sparkle/bin" \
+    "/opt/homebrew/bin" \
+    "/usr/local/bin"; do
+    if [[ -n "$candidate" && -x "$candidate/generate_appcast" ]]; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 signing_identity_available() {
   local identity="$1"
   security find-identity -v -p codesigning 2>/dev/null | grep -Fq "$identity"
@@ -166,6 +184,10 @@ fi
 
 CURRENT_VERSION="$(read_package_version)"
 validate_semver "$CURRENT_VERSION" || fail "Invalid current version in package.json: $CURRENT_VERSION"
+
+if resolved_sparkle_bin_dir="$(resolve_sparkle_bin_dir)"; then
+  SPARKLE_BIN_DIR="$resolved_sparkle_bin_dir"
+fi
 
 TARGET_VERSION="$CURRENT_VERSION"
 if [[ -n "$SET_VERSION" ]]; then
