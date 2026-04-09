@@ -48,6 +48,7 @@ For developers who want to build Text Shot locally.
 4. Launch the built app with `npm start`.
 5. Run tests with `npm test`.
 6. Create a distributable DMG with `bash scripts/release-native.sh --set-version <x.y.z>`.
+7. Export `SPARKLE_PRIVATE_ED_KEY` before publishing `dist-appcast/` so the appcast can be regenerated without breaking in-app updates.
 
 ### Release Outputs
 
@@ -82,8 +83,7 @@ Text Shot needs macOS Screen Recording permission before capture can begin.
 
 If the global shortcut does not present the selection overlay immediately after launch:
 
-- Open Text Shot once from the menu bar and confirm the shortcut shown in `Settings...`.
-- Trigger the shortcut again after the app is frontmost.
+- Confirm the shortcut shown in `Settings...`.
 - If the shortcut was changed recently, reopen `Settings...` and re-record it.
 - If the issue persists, quit and relaunch the app so macOS refreshes the menu bar app state and hotkey registration.
 

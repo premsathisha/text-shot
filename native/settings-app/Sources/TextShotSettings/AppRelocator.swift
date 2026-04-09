@@ -3,6 +3,21 @@ import Foundation
 
 @MainActor
 final class AppRelocator {
+    typealias OpenApplicationHandler = @MainActor (URL, NSWorkspace.OpenConfiguration, @escaping @Sendable (NSRunningApplication?, Error?) -> Void) -> Void
+
+    private let fm: FileManager
+    private let openApplication: OpenApplicationHandler
+
+    init(
+        fileManager: FileManager = .default,
+        openApplication: @escaping OpenApplicationHandler = { url, configuration, completion in
+            NSWorkspace.shared.openApplication(at: url, configuration: configuration, completionHandler: completion)
+        }
+    ) {
+        self.fm = fileManager
+        self.openApplication = openApplication
+    }
+
     func promptToMoveIfNeeded() {
         guard shouldPromptForMove() else { return }
 
@@ -34,21 +49,18 @@ final class AppRelocator {
     }
 
     private func moveAndRelaunch() {
-        let fm = FileManager.default
         let sourceURL = Bundle.main.bundleURL
         let destinationURL = URL(fileURLWithPath: "/Applications").appendingPathComponent(sourceURL.lastPathComponent)
 
         do {
-            if fm.fileExists(atPath: destinationURL.path) {
-                try fm.trashItem(at: destinationURL, resultingItemURL: nil)
-            }
-
-            try fm.copyItem(at: sourceURL, to: destinationURL)
+            let finalURL = try relocateAppBundle(from: sourceURL, to: destinationURL)
 
             let config = NSWorkspace.OpenConfiguration()
             config.activates = true
-            NSWorkspace.shared.openApplication(at: destinationURL, configuration: config) { _, _ in
-                NSApp.terminate(nil)
+            openApplication(finalURL, config) { _, _ in
+                Task { @MainActor in
+                    NSApp.terminate(nil)
+                }
             }
         } catch {
             let errorAlert = NSAlert()
@@ -56,6 +68,40 @@ final class AppRelocator {
             errorAlert.messageText = "Could not move Text Shot"
             errorAlert.informativeText = error.localizedDescription
             errorAlert.runModal()
+        }
+    }
+
+    @discardableResult
+    func relocateAppBundle(from sourceURL: URL, to destinationURL: URL) throws -> URL {
+        let stagingURL = destinationURL
+            .deletingLastPathComponent()
+            .appendingPathComponent(".\(destinationURL.lastPathComponent).\(UUID().uuidString).staged")
+        let backupName = ".\(destinationURL.lastPathComponent).backup"
+        let backupURL = destinationURL.deletingLastPathComponent().appendingPathComponent(backupName)
+
+        try? fm.removeItem(at: stagingURL)
+        try? fm.removeItem(at: backupURL)
+
+        do {
+            try fm.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try fm.copyItem(at: sourceURL, to: stagingURL)
+
+            if fm.fileExists(atPath: destinationURL.path) {
+                let resultingURL = try fm.replaceItemAt(
+                    destinationURL,
+                    withItemAt: stagingURL,
+                    backupItemName: backupName,
+                    options: []
+                )
+                try? fm.removeItem(at: backupURL)
+                return resultingURL ?? destinationURL
+            }
+
+            try fm.moveItem(at: stagingURL, to: destinationURL)
+            return destinationURL
+        } catch {
+            try? fm.removeItem(at: stagingURL)
+            throw error
         }
     }
 }

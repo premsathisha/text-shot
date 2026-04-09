@@ -14,6 +14,7 @@ SPARKLE_KEY_ACCOUNT="${SPARKLE_KEY_ACCOUNT:-ed25519}"
 SPARKLE_PRIVATE_ED_KEY="${SPARKLE_PRIVATE_ED_KEY:-}"
 SPARKLE_PUBLIC_ED_KEY="${SPARKLE_PUBLIC_ED_KEY:-$DEFAULT_SPARKLE_PUBLIC_ED_KEY}"
 BUILD_OUTPUT_DIR="$(mktemp -d "/tmp/text-shot-release-build.XXXXXX")"
+TEMP_SPARKLE_PUBLISH_DIR=0
 SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-$DEFAULT_SPARKLE_FEED_URL}"
 SPARKLE_DOWNLOAD_URL_PREFIX="${SPARKLE_DOWNLOAD_URL_PREFIX:-$DEFAULT_SPARKLE_DOWNLOAD_URL_PREFIX}"
 OFFICIAL_RELEASE="${OFFICIAL_RELEASE:-0}"
@@ -68,9 +69,11 @@ signing_identity_available() {
 
 prepare_sparkle_publish_dir() {
   mkdir -p "$SPARKLE_PUBLISH_DIR"
-  find "$SPARKLE_PUBLISH_DIR" -maxdepth 1 -type f \
-    \( -name "$APP_NAME-*.zip" -o -name 'appcast*.xml' \) \
-    -delete
+  find "$SPARKLE_PUBLISH_DIR" -maxdepth 1 -type f -name "$APP_NAME-*.zip" -delete
+}
+
+prepare_sparkle_appcast_outputs() {
+  find "$SPARKLE_PUBLISH_DIR" -maxdepth 1 -type f -name 'appcast*.xml' -delete
 }
 
 validate_official_release_prereqs() {
@@ -79,6 +82,7 @@ validate_official_release_prereqs() {
   [[ -n "${APPLE_DEVELOPER_ID_APP:-}" ]] || fail "Official releases require APPLE_DEVELOPER_ID_APP."
   signing_identity_available "$APPLE_DEVELOPER_ID_APP" || fail "Signing identity not available in Keychain: $APPLE_DEVELOPER_ID_APP"
   [[ -n "$SPARKLE_PUBLIC_ED_KEY" ]] || fail "Official releases require SPARKLE_PUBLIC_ED_KEY."
+  [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]] || fail "Official releases require SPARKLE_PRIVATE_ED_KEY."
   is_https_url "$SPARKLE_FEED_URL" || fail "Official releases require an https SPARKLE_FEED_URL."
   is_https_url "$SPARKLE_DOWNLOAD_URL_PREFIX" || fail "Official releases require an https SPARKLE_DOWNLOAD_URL_PREFIX."
   sparkle_tools_ready || fail "Official releases require SPARKLE_BIN_DIR with generate_appcast."
@@ -91,37 +95,32 @@ validate_official_release_prereqs() {
 }
 
 sparkle_appcast_command() {
-  if [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]]; then
-    printf '%s\n' "$SPARKLE_PRIVATE_ED_KEY" | "$SPARKLE_BIN_DIR/generate_appcast" \
-      --account "$SPARKLE_KEY_ACCOUNT" \
-      --ed-key-file - \
-      --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
-      "$SPARKLE_PUBLISH_DIR"
-    return 0
-  fi
-
-  if [[ -x "$SPARKLE_BIN_DIR/generate_keys" ]]; then
-    local temp_key_file
-    temp_key_file="$(mktemp "/tmp/text-shot-sparkle-private-key.XXXXXX")"
-    "$SPARKLE_BIN_DIR/generate_keys" --account "$SPARKLE_KEY_ACCOUNT" -x "$temp_key_file" >/dev/null
-    "$SPARKLE_BIN_DIR/generate_appcast" \
-      --account "$SPARKLE_KEY_ACCOUNT" \
-      --ed-key-file "$temp_key_file" \
-      --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
-      "$SPARKLE_PUBLISH_DIR"
-    rm -f "$temp_key_file"
-    return 0
-  fi
-
+  [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]] || fail "SPARKLE_PRIVATE_ED_KEY is required to generate a Sparkle appcast."
   "$SPARKLE_BIN_DIR/generate_appcast" \
     --account "$SPARKLE_KEY_ACCOUNT" \
+    --ed-key-file - \
     --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
-    "$SPARKLE_PUBLISH_DIR"
+    "$SPARKLE_PUBLISH_DIR" <<<"$SPARKLE_PRIVATE_ED_KEY"
 }
 
 sparkle_tools_ready() {
   [[ -n "$SPARKLE_BIN_DIR" ]] &&
   [[ -x "$SPARKLE_BIN_DIR/generate_appcast" ]]
+}
+
+can_generate_sparkle_appcast() {
+  sparkle_tools_ready &&
+  [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]] &&
+  [[ -n "${SPARKLE_PRIVATE_ED_KEY:-}" ]]
+}
+
+prepare_effective_sparkle_publish_dir() {
+  if can_generate_sparkle_appcast; then
+    return 0
+  fi
+
+  SPARKLE_PUBLISH_DIR="$(mktemp -d "/tmp/text-shot-sparkle-publish.XXXXXX")"
+  TEMP_SPARKLE_PUBLISH_DIR=1
 }
 
 validate_semver() {
@@ -205,6 +204,7 @@ if [[ "$TARGET_VERSION" != "$CURRENT_VERSION" ]]; then
 fi
 
 validate_official_release_prereqs
+prepare_effective_sparkle_publish_dir
 mkdir -p "$RELEASE_DIR"
 OUT_DIR="$BUILD_OUTPUT_DIR" bash "$ROOT_DIR/scripts/build-settings-app.sh"
 APP_PATH="$BUILD_OUTPUT_DIR/Text Shot.app"
@@ -229,13 +229,20 @@ rm -f "$SPARKLE_ARCHIVE_PATH"
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$SPARKLE_ARCHIVE_PATH"
 
 if sparkle_tools_ready; then
-  if [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]]; then
+  if [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" && -n "${SPARKLE_PRIVATE_ED_KEY:-}" ]]; then
     SPARKLE_FEED_FILENAME="$(basename "$SPARKLE_FEED_URL")"
+    prepare_sparkle_appcast_outputs
     sparkle_appcast_command
     if [[ "$SPARKLE_FEED_FILENAME" != "appcast.xml" && -f "$SPARKLE_PUBLISH_DIR/appcast.xml" ]]; then
       cp -f "$SPARKLE_PUBLISH_DIR/appcast.xml" "$SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME"
     fi
     [[ -f "$SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME" ]] || fail "Sparkle appcast was not generated at $SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME"
+  elif [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]]; then
+    if [[ "$OFFICIAL_RELEASE" == "1" ]]; then
+      fail "Sparkle private EdDSA key is missing."
+    else
+      echo "Skipping Sparkle appcast generation because SPARKLE_PRIVATE_ED_KEY is not set"
+    fi
   else
     if [[ "$OFFICIAL_RELEASE" == "1" ]]; then
       fail "Sparkle public EdDSA key is missing."
@@ -260,6 +267,9 @@ mkdir -p "$STAGING_DIR"
 cleanup() {
   rm -rf "$DMG_TEMP_DIR"
   rm -rf "$BUILD_OUTPUT_DIR"
+  if [[ "$TEMP_SPARKLE_PUBLISH_DIR" -eq 1 ]]; then
+    rm -rf "$SPARKLE_PUBLISH_DIR"
+  fi
 }
 trap cleanup EXIT
 
@@ -280,6 +290,6 @@ shasum -a 256 "$RELEASE_DIR/$DMG_NAME" > "$RELEASE_DIR/$DMG_NAME.sha256"
 
 echo "Release artifact ready: $RELEASE_DIR/$DMG_NAME"
 echo "Checksum ready: $RELEASE_DIR/$DMG_NAME.sha256"
-if sparkle_tools_ready; then
+if can_generate_sparkle_appcast; then
   echo "Sparkle publish directory ready: $SPARKLE_PUBLISH_DIR"
 fi

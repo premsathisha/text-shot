@@ -4,14 +4,26 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETTINGS_DIR="$ROOT_DIR/native/settings-app"
 GENERATED_DIR="$ROOT_DIR/.generated"
+TMP_ROOT="${TMPDIR:-/tmp}"
+ARM_BUILD_CREATED=0
+X64_BUILD_CREATED=0
+MODULE_CACHE_CREATED=0
+CLANG_CACHE_CREATED=0
+
 # Use /tmp for SwiftPM scratch builds to avoid occasional sqlite build.db I/O errors under Documents/iCloud.
-ARM_BUILD="/tmp/text-shot-settings-build-arm64"
-X64_BUILD="/tmp/text-shot-settings-build-x86_64"
+if [[ -z "${ARM_BUILD:-}" ]]; then
+  ARM_BUILD="$(mktemp -d "$TMP_ROOT/text-shot-settings-build-arm64.XXXXXX")"
+  ARM_BUILD_CREATED=1
+fi
+if [[ -z "${X64_BUILD:-}" ]]; then
+  X64_BUILD="$(mktemp -d "$TMP_ROOT/text-shot-settings-build-x86_64.XXXXXX")"
+  X64_BUILD_CREATED=1
+fi
 DEFAULT_OUT_DIR="$GENERATED_DIR/app"
 OUT_DIR="${OUT_DIR:-$DEFAULT_OUT_DIR}"
 BUILD_OUT_DIR="$OUT_DIR"
 if [[ "$OUT_DIR" == "$DEFAULT_OUT_DIR" ]]; then
-  BUILD_OUT_DIR="$(mktemp -d "/tmp/text-shot-build-output.XXXXXX")"
+  BUILD_OUT_DIR="$(mktemp -d "$TMP_ROOT/text-shot-build-output.XXXXXX")"
 fi
 APP_DIR="$BUILD_OUT_DIR/Text Shot.app"
 FINAL_APP_DIR="$OUT_DIR/Text Shot.app"
@@ -21,12 +33,18 @@ THIRD_PARTY_NOTICES_SRC="$ROOT_DIR/ThirdPartyNotices.txt"
 THIRD_PARTY_NOTICES_NAME="ThirdPartyNotices.txt"
 DEFAULT_SPARKLE_FEED_URL="https://premsathisha.github.io/text-shot/dist-appcast/appcast.xml"
 DEFAULT_SPARKLE_PUBLIC_ED_KEY="RR+P/ZV3Sse/zynriDZbZit/No5fwEVYEQf0Y33e3sc="
-MODULE_CACHE_DIR="$ROOT_DIR/.swiftpm-module-cache"
-CLANG_CACHE_DIR="$ROOT_DIR/.clang-module-cache"
+if [[ -z "${MODULE_CACHE_DIR:-}" ]]; then
+  MODULE_CACHE_DIR="$(mktemp -d "$TMP_ROOT/text-shot-swiftpm-module-cache.XXXXXX")"
+  MODULE_CACHE_CREATED=1
+fi
+if [[ -z "${CLANG_CACHE_DIR:-}" ]]; then
+  CLANG_CACHE_DIR="$(mktemp -d "$TMP_ROOT/text-shot-clang-module-cache.XXXXXX")"
+  CLANG_CACHE_CREATED=1
+fi
 APP_VERSION="$(awk -F'\"' '/\"version\"/ {print $4; exit}' "$ROOT_DIR/package.json")"
 BUILD_NUMBER="$APP_VERSION"
 UNIVERSAL_BINARY_PATH="$BUILD_OUT_DIR/text-shot"
-APP_ICON_TMP_DIR="$(mktemp -d "/tmp/text-shot-app-icon.XXXXXX")"
+APP_ICON_TMP_DIR="$(mktemp -d "$TMP_ROOT/text-shot-app-icon.XXXXXX")"
 APP_ICONSET_DIR="$APP_ICON_TMP_DIR/TextShot.iconset"
 GENERATED_APP_ICON_PATH="$APP_ICON_TMP_DIR/$APP_ICON_NAME"
 SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-$DEFAULT_SPARKLE_FEED_URL}"
@@ -39,6 +57,18 @@ fail() {
 
 cleanup() {
   rm -rf "$APP_ICON_TMP_DIR"
+  if [[ "$ARM_BUILD_CREATED" -eq 1 ]]; then
+    rm -rf "$ARM_BUILD"
+  fi
+  if [[ "$X64_BUILD_CREATED" -eq 1 ]]; then
+    rm -rf "$X64_BUILD"
+  fi
+  if [[ "$MODULE_CACHE_CREATED" -eq 1 ]]; then
+    rm -rf "$MODULE_CACHE_DIR"
+  fi
+  if [[ "$CLANG_CACHE_CREATED" -eq 1 ]]; then
+    rm -rf "$CLANG_CACHE_DIR"
+  fi
   if [[ "$BUILD_OUT_DIR" != "$OUT_DIR" ]]; then
     rm -rf "$BUILD_OUT_DIR"
   fi
@@ -139,6 +169,27 @@ copy_sparkle_framework() {
   xattr -cr "$frameworks_dir/Sparkle.framework"
 }
 
+copy_swiftpm_resource_bundles() {
+  local resources_dir="$APP_DIR/Contents/Resources"
+  local bundle_path
+  local copied_count=0
+
+  mkdir -p "$resources_dir"
+
+  while IFS= read -r -d '' bundle_path; do
+    local bundle_name
+    bundle_name="$(basename "$bundle_path")"
+
+    rm -rf "$resources_dir/$bundle_name"
+    ditto "$bundle_path" "$resources_dir/$bundle_name"
+    copied_count=$((copied_count + 1))
+  done < <(
+    find "$ARM_BUILD" "$X64_BUILD" -type d -path '*/release/*.bundle' -print0 2>/dev/null
+  )
+
+  (( copied_count > 0 )) || fail "Unable to locate SwiftPM resource bundles in build output"
+}
+
 codesign_path() {
   local path="$1"
   if [[ -n "${APPLE_DEVELOPER_ID_APP:-}" ]]; then
@@ -201,6 +252,7 @@ chmod +x "$APP_DIR/Contents/MacOS/Text Shot"
 cp -f "$GENERATED_APP_ICON_PATH" "$APP_DIR/Contents/Resources/$APP_ICON_NAME"
 [[ -f "$THIRD_PARTY_NOTICES_SRC" ]] || fail "Missing third-party notices file: $THIRD_PARTY_NOTICES_SRC"
 cp -f "$THIRD_PARTY_NOTICES_SRC" "$APP_DIR/Contents/Resources/$THIRD_PARTY_NOTICES_NAME"
+copy_swiftpm_resource_bundles
 
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

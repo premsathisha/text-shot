@@ -1,4 +1,5 @@
 import AppKit
+import KeyboardShortcuts
 import SwiftUI
 
 private enum Bootstrap {
@@ -80,10 +81,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var controller = Bootstrap.appController(updateManager: updateManager)
     private let appRelocator = AppRelocator()
     private var statusItem: NSStatusItem?
+    private var didWakeObserver: NSObjectProtocol?
     private var willTerminateObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         CaptureTempStore.shared.prepareForLaunch()
+        _ = controller
+        didWakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            // Carbon hotkey registrations go stale after sleep; force re-registration.
+            KeyboardShortcuts.isEnabled = false
+            KeyboardShortcuts.isEnabled = true
+        }
         willTerminateObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
             object: nil,
