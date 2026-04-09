@@ -48,7 +48,7 @@ For developers who want to build Text Shot locally.
 4. Launch the built app with `npm start`.
 5. Run tests with `npm test`.
 6. Create a distributable DMG with `bash scripts/release-native.sh --set-version <x.y.z>`.
-7. Export `SPARKLE_PRIVATE_ED_KEY` before publishing `dist-appcast/` so the appcast can be regenerated without breaking in-app updates.
+7. Make sure the Sparkle signing key is available either in the login Keychain or via `SPARKLE_PRIVATE_ED_KEY` before publishing `dist-appcast/`, so the appcast can be regenerated without breaking in-app updates.
 
 ### Release Outputs
 

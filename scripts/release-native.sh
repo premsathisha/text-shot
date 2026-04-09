@@ -82,10 +82,10 @@ validate_official_release_prereqs() {
   [[ -n "${APPLE_DEVELOPER_ID_APP:-}" ]] || fail "Official releases require APPLE_DEVELOPER_ID_APP."
   signing_identity_available "$APPLE_DEVELOPER_ID_APP" || fail "Signing identity not available in Keychain: $APPLE_DEVELOPER_ID_APP"
   [[ -n "$SPARKLE_PUBLIC_ED_KEY" ]] || fail "Official releases require SPARKLE_PUBLIC_ED_KEY."
-  [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]] || fail "Official releases require SPARKLE_PRIVATE_ED_KEY."
   is_https_url "$SPARKLE_FEED_URL" || fail "Official releases require an https SPARKLE_FEED_URL."
   is_https_url "$SPARKLE_DOWNLOAD_URL_PREFIX" || fail "Official releases require an https SPARKLE_DOWNLOAD_URL_PREFIX."
   sparkle_tools_ready || fail "Official releases require SPARKLE_BIN_DIR with generate_appcast."
+  sparkle_signing_key_available || fail "Official releases require a Sparkle signing key in SPARKLE_PRIVATE_ED_KEY or the login Keychain."
 
   if [[ "$SKIP_NOTARIZE" -eq 0 ]]; then
     [[ -n "${APPLE_ID:-}" ]] || fail "Official notarized releases require APPLE_ID."
@@ -95,12 +95,19 @@ validate_official_release_prereqs() {
 }
 
 sparkle_appcast_command() {
-  [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]] || fail "SPARKLE_PRIVATE_ED_KEY is required to generate a Sparkle appcast."
+  if [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]]; then
+    "$SPARKLE_BIN_DIR/generate_appcast" \
+      --account "$SPARKLE_KEY_ACCOUNT" \
+      --ed-key-file - \
+      --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
+      "$SPARKLE_PUBLISH_DIR" <<<"$SPARKLE_PRIVATE_ED_KEY"
+    return 0
+  fi
+
   "$SPARKLE_BIN_DIR/generate_appcast" \
     --account "$SPARKLE_KEY_ACCOUNT" \
-    --ed-key-file - \
     --download-url-prefix "$SPARKLE_DOWNLOAD_URL_PREFIX" \
-    "$SPARKLE_PUBLISH_DIR" <<<"$SPARKLE_PRIVATE_ED_KEY"
+    "$SPARKLE_PUBLISH_DIR"
 }
 
 sparkle_tools_ready() {
@@ -108,10 +115,19 @@ sparkle_tools_ready() {
   [[ -x "$SPARKLE_BIN_DIR/generate_appcast" ]]
 }
 
+sparkle_signing_key_available() {
+  if [[ -n "$SPARKLE_PRIVATE_ED_KEY" ]]; then
+    return 0
+  fi
+
+  [[ -x "$SPARKLE_BIN_DIR/generate_keys" ]] || return 1
+  "$SPARKLE_BIN_DIR/generate_keys" --account "$SPARKLE_KEY_ACCOUNT" -p >/dev/null 2>&1
+}
+
 can_generate_sparkle_appcast() {
   sparkle_tools_ready &&
   [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]] &&
-  [[ -n "${SPARKLE_PRIVATE_ED_KEY:-}" ]]
+  sparkle_signing_key_available
 }
 
 prepare_effective_sparkle_publish_dir() {
@@ -229,7 +245,7 @@ rm -f "$SPARKLE_ARCHIVE_PATH"
 ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$SPARKLE_ARCHIVE_PATH"
 
 if sparkle_tools_ready; then
-  if [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" && -n "${SPARKLE_PRIVATE_ED_KEY:-}" ]]; then
+  if [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]] && sparkle_signing_key_available; then
     SPARKLE_FEED_FILENAME="$(basename "$SPARKLE_FEED_URL")"
     prepare_sparkle_appcast_outputs
     sparkle_appcast_command
@@ -239,9 +255,9 @@ if sparkle_tools_ready; then
     [[ -f "$SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME" ]] || fail "Sparkle appcast was not generated at $SPARKLE_PUBLISH_DIR/$SPARKLE_FEED_FILENAME"
   elif [[ -n "${SPARKLE_PUBLIC_ED_KEY:-}" ]]; then
     if [[ "$OFFICIAL_RELEASE" == "1" ]]; then
-      fail "Sparkle private EdDSA key is missing."
+      fail "Sparkle signing key is missing."
     else
-      echo "Skipping Sparkle appcast generation because SPARKLE_PRIVATE_ED_KEY is not set"
+      echo "Skipping Sparkle appcast generation because no Sparkle signing key was found in SPARKLE_PRIVATE_ED_KEY or the login Keychain"
     fi
   else
     if [[ "$OFFICIAL_RELEASE" == "1" ]]; then
