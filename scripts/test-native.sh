@@ -40,4 +40,7 @@ mkdir -p "$MODULE_CACHE_DIR" "$CLANG_CACHE_DIR"
 export SWIFTPM_MODULECACHE_OVERRIDE="$MODULE_CACHE_DIR"
 export CLANG_MODULE_CACHE_PATH="$CLANG_CACHE_DIR"
 
-swift test --package-path "$PACKAGE_DIR" --scratch-path "$SCRATCH_PATH"
+swift test \
+  --package-path "$PACKAGE_DIR" \
+  --scratch-path "$SCRATCH_PATH" \
+  --no-parallel

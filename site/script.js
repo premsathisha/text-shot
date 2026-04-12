@@ -16,7 +16,7 @@
       {
         duration: 900,
         easing: "ease-out",
-        fill: "both",
+        fill: "none",
       }
     );
   }
