@@ -140,25 +140,30 @@ button:focus-visible {
   padding: 0 1.15rem;
   font-size: 14px;
   font-weight: 500;
-  transition: transform 150ms ease;
 }
 
 .btn-primary {
-  background: var(--button-solid);
+  background: #fff;
   color: var(--button-solid-text);
+  transition: background-color 500ms ease;
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-strong);
   border: 1px solid var(--divider);
+  transition: border-color 500ms ease;
 }
 
-.btn-primary:hover,
-.btn-primary:focus-visible,
+#download-button:hover,
+#download-button:focus-visible {
+  background: #e5e5e6;
+  box-shadow: none;
+}
+
 .btn-ghost:hover,
 .btn-ghost:focus-visible {
-  transform: translateY(-1px);
+  border-color: #e5e5e6;
 }
 
 .hero-screenshot-placeholder {
@@ -304,15 +309,14 @@ html.window-blurred .site-shell {
 
 @media (max-width: 400px) {
   .hero-btns {
-    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .btn-primary,
   .btn-ghost {
     justify-content: center;
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
+    width: 100%;
   }
 }
 
@@ -326,8 +330,4 @@ html.window-blurred .site-shell {
     opacity: 1;
   }
 
-  .btn-primary,
-  .btn-ghost {
-    transition: none;
-  }
 }
