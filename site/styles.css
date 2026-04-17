@@ -176,6 +176,45 @@ button:focus-visible {
   height: auto;
 }
 
+.feature-grid {
+  margin-top: 3.1rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2.6rem 2.1rem;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.feature-item i,
+.feature-item svg,
+.feature-item .lucide {
+  width: 20px;
+  height: 20px;
+  color: #5a8def;
+  stroke: currentColor;
+  stroke-width: 2;
+  margin-bottom: 0.85rem;
+}
+
+.feature-item h3 {
+  margin: 0 0 0.3rem;
+  color: var(--text-strong);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.feature-item p {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .site-footer {
   margin-top: 3.8rem;
   border-top: 1px solid var(--divider);
@@ -236,29 +275,50 @@ html.window-blurred .site-shell {
     border-radius: 14px;
   }
 
+  .feature-grid {
+    margin-top: 2.35rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.75rem;
+  }
+
+  .feature-item i,
+  .feature-item svg,
+  .feature-item .lucide {
+    margin-bottom: 0.65rem;
+  }
+
   .site-footer {
     margin-top: 2.5rem;
     padding-top: 1.4rem;
   }
 
   .footer-inner {
-    align-items: flex-start;
+    align-items: center;
     flex-direction: column;
     flex-wrap: nowrap;
     gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
   }
 }
 
 @media (max-width: 400px) {
   .hero-btns {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: nowrap;
   }
 
   .btn-primary,
   .btn-ghost {
     justify-content: center;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
   }
 }
 
