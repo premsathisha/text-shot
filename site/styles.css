@@ -301,12 +301,6 @@ html.window-blurred .site-shell {
   }
 }
 
-@media (max-width: 480px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
-  }
-}
 
 @media (max-width: 400px) {
   .hero-btns {

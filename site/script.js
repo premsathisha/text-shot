@@ -73,10 +73,6 @@
   runModeBlur();
   wireLatestRelease();
 
-  if (window.lucide && typeof window.lucide.createIcons === "function") {
-    window.lucide.createIcons();
-  }
-
   window.addEventListener("blur", addBlur);
   window.addEventListener("focus", removeBlur);
 })();
