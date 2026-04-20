@@ -112,8 +112,7 @@ final class AppController {
 
     func openSettings() {
         if let existingWindow = settingsWindowController?.window {
-            existingWindow.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            presentSettingsWindow(existingWindow)
             return
         }
 
@@ -134,9 +133,9 @@ final class AppController {
             self.settingsViewModel = nil
         }
         settingsWindowController = controller
-        controller.showWindow(nil)
-        controller.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        if let window = controller.window {
+            presentSettingsWindow(window)
+        }
     }
 
     func captureNow() {
@@ -152,6 +151,10 @@ final class AppController {
 
     func isSettingsWindowOpenForTesting() -> Bool {
         settingsWindowController != nil
+    }
+
+    private func presentSettingsWindow(_ window: NSWindow) {
+        window.orderFrontRegardless()
     }
 
     private func installStartupState() {

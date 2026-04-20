@@ -79,7 +79,6 @@ enum StatusMenuBuilder {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var updateManager = Bootstrap.updateManager()
     private lazy var controller = Bootstrap.appController(updateManager: updateManager)
-    private let appRelocator = AppRelocator()
     private var statusItem: NSStatusItem?
     private var didWakeObserver: NSObjectProtocol?
     private var willTerminateObserver: NSObjectProtocol?
@@ -104,7 +103,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             CaptureTempStore.shared.cleanupTrackedFiles()
         }
         setupStatusItem()
-        appRelocator.promptToMoveIfNeeded()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -130,8 +128,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller.captureNow()
     }
 
-    @objc private func openSettings() {
+    func openSettingsFromCommand() {
         controller.openSettings()
+    }
+
+    @objc private func openSettings() {
+        openSettingsFromCommand()
     }
 
     @objc private func quitApp() {
@@ -146,6 +148,14 @@ struct TextShotApp: App {
     var body: some Scene {
         Settings {
             EmptyView()
+        }
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings...") {
+                    delegate.openSettingsFromCommand()
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
     }
 }

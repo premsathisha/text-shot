@@ -10,12 +10,37 @@ import OSLog
 import Carbon.HIToolbox
 
 
+private enum KeyboardShortcutsResources {
+	private static let bundleName = "KeyboardShortcuts_KeyboardShortcuts.bundle"
+
+	static let bundle: Bundle = {
+		let candidates = [
+			Bundle.main.resourceURL?.appendingPathComponent(bundleName),
+			Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/\(bundleName)")
+		]
+
+		for candidate in candidates {
+			guard
+				let candidate,
+				let bundle = Bundle(url: candidate)
+			else {
+				continue
+			}
+
+			return bundle
+		}
+
+		return .main
+	}()
+}
+
+
 extension String {
 	/**
 	Makes the string localizable.
 	*/
 	var localized: String {
-		NSLocalizedString(self, bundle: .module, comment: self)
+		NSLocalizedString(self, bundle: KeyboardShortcutsResources.bundle, comment: self)
 	}
 }
 

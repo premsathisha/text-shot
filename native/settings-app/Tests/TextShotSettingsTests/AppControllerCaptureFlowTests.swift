@@ -141,13 +141,25 @@ private func makeSettingsStore() throws -> (SettingsStoreV2, URL) {
 }
 
 @MainActor
+private final class TestSettingsWindow: NSWindow {
+    private(set) var orderFrontRegardlessCallCount = 0
+
+    override func orderFrontRegardless() {
+        orderFrontRegardlessCallCount += 1
+    }
+}
+
+@MainActor
 private final class TestSettingsWindowController: NSWindowController {
     private let onClose: @MainActor () -> Void
     private(set) var showWindowCallCount = 0
+    let testWindow: TestSettingsWindow
 
     init(onClose: @escaping @MainActor () -> Void) {
+        let testWindow = TestSettingsWindow()
         self.onClose = onClose
-        super.init(window: NSWindow())
+        self.testWindow = testWindow
+        super.init(window: testWindow)
     }
 
     @available(*, unavailable)
@@ -239,7 +251,8 @@ func appControllerReusesOpenSettingsWindowAndRecreatesAfterClose() throws {
     controller.openSettings()
 
     #expect(createdControllers.count == 1)
-    #expect(createdControllers[0].showWindowCallCount == 1)
+    #expect(createdControllers[0].showWindowCallCount == 0)
+    #expect(createdControllers[0].testWindow.orderFrontRegardlessCallCount == 2)
     #expect(controller.isSettingsWindowOpenForTesting())
 
     createdControllers[0].simulateClose()
@@ -249,7 +262,8 @@ func appControllerReusesOpenSettingsWindowAndRecreatesAfterClose() throws {
     controller.openSettings()
 
     #expect(createdControllers.count == 2)
-    #expect(createdControllers[1].showWindowCallCount == 1)
+    #expect(createdControllers[1].showWindowCallCount == 0)
+    #expect(createdControllers[1].testWindow.orderFrontRegardlessCallCount == 1)
     #expect(controller.isSettingsWindowOpenForTesting())
 }
 

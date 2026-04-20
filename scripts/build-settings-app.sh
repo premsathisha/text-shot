@@ -182,6 +182,7 @@ copy_swiftpm_resource_bundles() {
 
     rm -rf "$resources_dir/$bundle_name"
     ditto "$bundle_path" "$resources_dir/$bundle_name"
+    [[ -d "$resources_dir/$bundle_name" ]] || fail "Missing SwiftPM resource bundle in Resources: $resources_dir/$bundle_name"
     copied_count=$((copied_count + 1))
   done < <(
     find "$ARM_BUILD" "$X64_BUILD" -type d -path '*/release/*.bundle' -print0 2>/dev/null
