@@ -29,6 +29,10 @@ APP_DIR="$BUILD_OUT_DIR/Text Shot.app"
 FINAL_APP_DIR="$OUT_DIR/Text Shot.app"
 APP_ICON_PNG_SRC="${APP_ICON_PNG_SRC:-$ROOT_DIR/assets/macOS App Icon/text-shot-source-1024.png}"
 APP_ICON_NAME="app_icon.icns"
+MENU_BAR_ICON_ASSET_DIR="$ROOT_DIR/assets/macOS Menu Bar Icons"
+MENU_BAR_ICON_PDF_SRC="$MENU_BAR_ICON_ASSET_DIR/text-shot-Template.pdf"
+MENU_BAR_ICON_PNG_SRC="$MENU_BAR_ICON_ASSET_DIR/text-shot-Template.png"
+MENU_BAR_ICON_SVG_SRC="$MENU_BAR_ICON_ASSET_DIR/text-shot-Template.svg"
 THIRD_PARTY_NOTICES_SRC="$ROOT_DIR/ThirdPartyNotices.txt"
 THIRD_PARTY_NOTICES_NAME="ThirdPartyNotices.txt"
 DEFAULT_SPARKLE_FEED_URL="https://premsathisha.github.io/text-shot/dist-appcast/appcast.xml"
@@ -191,6 +195,19 @@ copy_swiftpm_resource_bundles() {
   (( copied_count > 0 )) || fail "Unable to locate SwiftPM resource bundles in build output"
 }
 
+sync_menu_bar_icon_resources() {
+  local resource_bundle_dir="$APP_DIR/Contents/Resources/TextShotSettings_TextShotSettings.bundle"
+
+  [[ -d "$resource_bundle_dir" ]] || fail "Missing TextShotSettings resource bundle: $resource_bundle_dir"
+  [[ -f "$MENU_BAR_ICON_PDF_SRC" ]] || fail "Missing menu bar icon PDF source: $MENU_BAR_ICON_PDF_SRC"
+  [[ -f "$MENU_BAR_ICON_PNG_SRC" ]] || fail "Missing menu bar icon PNG source: $MENU_BAR_ICON_PNG_SRC"
+  [[ -f "$MENU_BAR_ICON_SVG_SRC" ]] || fail "Missing menu bar icon SVG source: $MENU_BAR_ICON_SVG_SRC"
+
+  cp -f "$MENU_BAR_ICON_PDF_SRC" "$resource_bundle_dir/text-shot-menubar-template.pdf"
+  cp -f "$MENU_BAR_ICON_PNG_SRC" "$resource_bundle_dir/text-shot-menubar-template.png"
+  cp -f "$MENU_BAR_ICON_SVG_SRC" "$resource_bundle_dir/text-shot-menubar-template.svg"
+}
+
 codesign_path() {
   local path="$1"
   if [[ -n "${APPLE_DEVELOPER_ID_APP:-}" ]]; then
@@ -254,6 +271,7 @@ cp -f "$GENERATED_APP_ICON_PATH" "$APP_DIR/Contents/Resources/$APP_ICON_NAME"
 [[ -f "$THIRD_PARTY_NOTICES_SRC" ]] || fail "Missing third-party notices file: $THIRD_PARTY_NOTICES_SRC"
 cp -f "$THIRD_PARTY_NOTICES_SRC" "$APP_DIR/Contents/Resources/$THIRD_PARTY_NOTICES_NAME"
 copy_swiftpm_resource_bundles
+sync_menu_bar_icon_resources
 
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
