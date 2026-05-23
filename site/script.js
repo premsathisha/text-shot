@@ -70,8 +70,20 @@
     root.classList.remove("window-blurred");
   }
 
+  function attachIconFallbacks() {
+    var svgIcon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+    var alternateIcon = document.querySelector('link[rel="alternate icon"]');
+
+    if (svgIcon && alternateIcon) {
+      svgIcon.addEventListener("error", function () {
+        svgIcon.href = alternateIcon.href;
+      });
+    }
+  }
+
   runModeBlur();
   wireLatestRelease();
+  attachIconFallbacks();
 
   window.addEventListener("blur", addBlur);
   window.addEventListener("focus", removeBlur);

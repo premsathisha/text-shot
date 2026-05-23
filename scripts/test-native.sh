@@ -43,4 +43,5 @@ export CLANG_MODULE_CACHE_PATH="$CLANG_CACHE_DIR"
 swift test \
   --package-path "$PACKAGE_DIR" \
   --scratch-path "$SCRATCH_PATH" \
+  --disable-keychain \
   --no-parallel

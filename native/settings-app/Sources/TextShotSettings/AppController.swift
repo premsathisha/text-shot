@@ -223,13 +223,6 @@ final class AppController {
         isCaptureInFlight = true
         defer { isCaptureInFlight = false }
 
-        let hasScreenCaptureAccess = await screenCapturePermissionService.ensureAuthorized()
-
-        guard hasScreenCaptureAccess else {
-            showScreenRecordingPromptIfNeeded()
-            return
-        }
-
         let isInitialCaptureAttempt = !hasCompletedInitialCaptureAttempt
         defer { hasCompletedInitialCaptureAttempt = true }
 
@@ -247,7 +240,10 @@ final class AppController {
 
         guard let path = capture.path else {
             if capture.failureReason == .permissionDenied {
-                showScreenRecordingPromptIfNeeded()
+                let hasScreenCaptureAccess = await screenCapturePermissionService.ensureAuthorized()
+                if !hasScreenCaptureAccess {
+                    showScreenRecordingPromptIfNeeded()
+                }
             } else {
                 showToastIfEnabled("Capture failed")
             }
@@ -278,9 +274,6 @@ final class AppController {
     }
 
     private func prepareForInteractiveCapture(delayNanoseconds: UInt64) async {
-        NSApp.activate(ignoringOtherApps: true)
-        NSRunningApplication.current.activate(options: [.activateIgnoringOtherApps])
-
         if delayNanoseconds > 0 {
             try? await Task.sleep(nanoseconds: delayNanoseconds)
         }

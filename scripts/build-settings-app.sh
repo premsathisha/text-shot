@@ -27,7 +27,7 @@ if [[ "$OUT_DIR" == "$DEFAULT_OUT_DIR" ]]; then
 fi
 APP_DIR="$BUILD_OUT_DIR/Text Shot.app"
 FINAL_APP_DIR="$OUT_DIR/Text Shot.app"
-APP_ICON_PNG_SRC="${APP_ICON_PNG_SRC:-$ROOT_DIR/assets/Icon-iOS-Default-1024x1024@1x.png}"
+APP_ICON_PNG_SRC="${APP_ICON_PNG_SRC:-$ROOT_DIR/assets/macOS App Icon/text-shot-source-1024.png}"
 APP_ICON_NAME="app_icon.icns"
 THIRD_PARTY_NOTICES_SRC="$ROOT_DIR/ThirdPartyNotices.txt"
 THIRD_PARTY_NOTICES_NAME="ThirdPartyNotices.txt"
@@ -231,8 +231,8 @@ mkdir -p "$MODULE_CACHE_DIR" "$CLANG_CACHE_DIR"
 export SWIFTPM_MODULECACHE_OVERRIDE="$MODULE_CACHE_DIR"
 export CLANG_MODULE_CACHE_PATH="$CLANG_CACHE_DIR"
 
-swift build --package-path "$SETTINGS_DIR" -c release --arch arm64 --scratch-path "$ARM_BUILD"
-swift build --package-path "$SETTINGS_DIR" -c release --arch x86_64 --scratch-path "$X64_BUILD"
+swift build --package-path "$SETTINGS_DIR" -c release --arch arm64 --scratch-path "$ARM_BUILD" --disable-keychain
+swift build --package-path "$SETTINGS_DIR" -c release --arch x86_64 --scratch-path "$X64_BUILD" --disable-keychain
 
 rm -rf -- "$APP_DIR"
 

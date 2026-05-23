@@ -77,6 +77,14 @@ enum StatusMenuBuilder {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private static let menuBarIconHeight: CGFloat = 18
+    private static let menuBarIconWidth: CGFloat = 22
+    private static let menuBarItemHorizontalPadding: CGFloat = 2
+    private static let bundledMenuBarIconCandidates: [(name: String, ext: String)] = [
+        ("text-shot-menubar-template", "pdf"),
+        ("text-shot-menubar-template", "png")
+    ]
+
     private lazy var updateManager = Bootstrap.updateManager()
     private lazy var controller = Bootstrap.appController(updateManager: updateManager)
     private var statusItem: NSStatusItem?
@@ -110,8 +118,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupStatusItem() {
-        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.title = "TS"
+        let icon = loadMenuBarIcon()
+        let statusItem = NSStatusBar.system.statusItem(withLength: menuBarItemLength(for: icon))
+        if let button = statusItem.button {
+            button.title = ""
+            button.imageScaling = .scaleNone
+            if let icon {
+                button.image = icon
+                button.imagePosition = .imageOnly
+            } else {
+                button.image = nil
+                button.title = "TS"
+            }
+        }
 
         let menu = StatusMenuBuilder.makeMenu(
             target: self,
@@ -122,6 +141,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         statusItem.menu = menu
         self.statusItem = statusItem
+    }
+
+    private func loadMenuBarIcon() -> NSImage? {
+        let resourceBundle = appResourceBundle(named: "TextShotSettings_TextShotSettings")
+        for candidate in Self.bundledMenuBarIconCandidates {
+            let image: NSImage?
+            if candidate.ext == "png" {
+                image = resourceBundle?.image(forResource: candidate.name)
+            } else if let url = resourceBundle?.url(forResource: candidate.name, withExtension: candidate.ext) {
+                image = NSImage(contentsOf: url)
+            } else {
+                image = nil
+            }
+            guard let image else { continue }
+            return configuredMenuBarIcon(from: image)
+        }
+        return nil
+    }
+
+    private func configuredMenuBarIcon(from image: NSImage) -> NSImage {
+        image.isTemplate = true
+        image.accessibilityDescription = "Text Shot"
+        if image.size == .zero {
+            image.size = NSSize(width: Self.menuBarIconWidth, height: Self.menuBarIconHeight)
+        }
+        return image
+    }
+
+    private func menuBarItemLength(for icon: NSImage?) -> CGFloat {
+        guard let icon else { return NSStatusItem.squareLength }
+        return max(
+            NSStatusBar.system.thickness,
+            ceil(icon.size.width + Self.menuBarItemHorizontalPadding)
+        )
+    }
+
+    private func appResourceBundle(named name: String) -> Bundle? {
+        let bundleURL = Bundle.main.resourceURL?.appendingPathComponent("\(name).bundle")
+        guard let bundleURL else { return nil }
+        return Bundle(url: bundleURL)
     }
 
     @objc private func captureText() {

@@ -178,13 +178,13 @@ private final class TestSettingsWindowController: NSWindowController {
 
 @MainActor
 @Test
-func appControllerDeniedPreflightSkipsCapture() async throws {
+func appControllerAttemptsCaptureEvenWhenPreflightIsFalse() async throws {
     let (store, tempDir) = try makeSettingsStore()
     defer { try? FileManager.default.removeItem(at: tempDir) }
 
     let hotkeys = MockHotkeyController()
     let capture = MockCaptureService(
-        result: CaptureResult(canceled: false, path: nil, error: "unexpected", failureReason: .unexpected(message: "unexpected"))
+        result: CaptureResult(canceled: true, path: nil, error: nil, failureReason: nil)
     )
     let ocr = MockOCRService(text: nil)
     let clipboard = MockClipboardService()
@@ -206,8 +206,8 @@ func appControllerDeniedPreflightSkipsCapture() async throws {
 
     await controller.runCaptureFlow()
 
-    #expect(screenPerms.requestCount == 1)
-    #expect(capture.callCount == 0)
+    #expect(screenPerms.requestCount == 0)
+    #expect(capture.callCount == 1)
     #expect(toast.messages.isEmpty)
 }
 
@@ -442,6 +442,7 @@ func appControllerPermissionDeniedCaptureFailureSkipsOcrClipboardAndToast() asyn
     #expect(ocr.callCount == 0)
     #expect(clipboard.writes.isEmpty)
     #expect(toast.messages.isEmpty)
+    #expect(screenPerms.requestCount == 0)
 }
 
 @MainActor

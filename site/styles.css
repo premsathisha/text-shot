@@ -1,18 +1,15 @@
 :root {
   --bg: #0b0b0b;
-  --surface: #0b0b0b;
   --text-body: #a1a1a1;
   --text-strong: #ffffff;
   --divider: #2a2a2a;
   --subtle-fill: #141414;
-  --button-solid: #ffffff;
   --button-solid-text: #111111;
-  --chip-bg: #161616;
-  --chip-text: #bdbdbd;
+  --hover-fill: #e5e5e6;
   --accent: #5b8def;
   --shadow-soft: 0 24px 56px rgba(0, 0, 0, 0.42);
   --blur-amount: 1.5px;
-  --dim-opacity: 0.985;
+  --dim-opacity: 0.65;
 }
 
 * {
@@ -47,7 +44,7 @@ button:focus-visible {
 .site-shell {
   width: min(100%, 1040px);
   margin: 0 auto;
-  padding: 2.25rem 2rem 4rem;
+  padding: 2.25rem 2rem 2.8rem;
   filter: blur(0);
   opacity: 1;
   transition: filter 300ms ease, opacity 300ms ease;
@@ -75,6 +72,7 @@ button:focus-visible {
   width: 24px;
   height: 24px;
   border-radius: 6px;
+  border: 1px solid var(--divider);
   overflow: hidden;
 }
 
@@ -91,14 +89,7 @@ button:focus-visible {
 }
 
 .nav-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 0 0.7rem;
-  border-radius: 999px;
-  background: var(--chip-bg);
-  color: var(--chip-text);
+  color: var(--text-body);
   font-size: 12px;
   font-weight: 500;
 }
@@ -135,7 +126,7 @@ button:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border-radius: 999px;
+  border-radius: 18px;
   min-height: 42px;
   padding: 0 1.15rem;
   font-size: 14px;
@@ -143,7 +134,7 @@ button:focus-visible {
 }
 
 .btn-primary {
-  background: #fff;
+  background: var(--text-strong);
   color: var(--button-solid-text);
   transition: background-color 500ms ease;
 }
@@ -157,13 +148,13 @@ button:focus-visible {
 
 #download-button:hover,
 #download-button:focus-visible {
-  background: #e5e5e6;
+  background: var(--hover-fill);
   box-shadow: none;
 }
 
 .btn-ghost:hover,
 .btn-ghost:focus-visible {
-  border-color: #e5e5e6;
+  border-color: var(--hover-fill);
 }
 
 .hero-screenshot-placeholder {
@@ -221,9 +212,9 @@ button:focus-visible {
 }
 
 .site-footer {
-  margin-top: 3.8rem;
+  margin-top: 2.8rem;
   border-top: 1px solid var(--divider);
-  padding-top: 2rem;
+  padding-top: 2.8rem;
 }
 
 .footer-inner {
@@ -257,13 +248,22 @@ html.window-blurred .site-shell {
 
 @media (max-width: 700px) {
   .site-shell {
-    padding: 1.1rem 1rem 3rem;
+    padding: 1.1rem 1rem 2rem;
   }
 
   .site-nav {
     align-items: center;
     gap: 1rem;
     padding-bottom: 1.1rem;
+  }
+
+  .nav-logo-icon {
+    border-radius: 5px;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    border-radius: 14px;
   }
 
   .hero {
@@ -293,8 +293,8 @@ html.window-blurred .site-shell {
   }
 
   .site-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.4rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
   }
 
   .footer-inner {

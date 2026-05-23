@@ -9,8 +9,9 @@
       name="description"
       content="Text Shot is a lightweight macOS screenshot-to-text utility built for fast local OCR."
     />
-    <link rel="icon" type="image/png" href="./assets/Icon-iOS-Dark-1024x1024@1x.png" />
-    <link rel="apple-touch-icon" href="./assets/Icon-iOS-Dark-1024x1024@1x.png" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="./assets/favicon.ico" />
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -24,13 +25,18 @@
       <nav class="site-nav">
         <a class="nav-logo" href="./index.html">
           <span class="nav-logo-icon">
-            <img src="./assets/Icon-iOS-Dark-1024x1024@1x.png" alt="Text Shot app icon" />
+            <img
+              id="site-logo"
+              src="./assets/text-shot-logo.svg"
+              alt="Text Shot app icon"
+              onerror="if(!this.dataset.fallbackStep){this.dataset.fallbackStep='1';this.src='./assets/text-shot-logo-512.png';return;} if(this.dataset.fallbackStep==='1'){this.dataset.fallbackStep='2';this.src='./assets/apple-touch-icon.png';return;} this.style.display='none';"
+            />
           </span>
           Text Shot
         </a>
 
         <div class="nav-actions">
-          <span class="nav-badge" id="release-badge">v3.0.4</span>
+          <span class="nav-badge" id="release-badge">v3.0.5</span>
         </div>
       </nav>
 

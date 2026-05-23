@@ -241,12 +241,28 @@ final class OCRService {
             return .newline
         }
 
+        if shouldPreserveOrderedRowLineBreak(previous: previous, current: current, next: next, stats: stats) {
+            return .newline
+        }
+
         if looksLikeHeading(previous, fillRatio: previousFill) {
+            return .newline
+        }
+
+        if endsSentence(previousText) && startsLikelyNewSentence(currentText) && !continuesParagraphAfterSentence(previous: previous, current: current, next: next, stats: stats) {
             return .newline
         }
 
         if isNarrowStandaloneRow(previous) && isNarrowStandaloneRow(current) {
             return .newline
+        }
+
+        if looksLikeTrailingPhrase(previous: previous, current: current, stats: stats) {
+            return .space
+        }
+
+        if looksLikeWrappedSentence(previous: previous, current: current, stats: stats) {
+            return .space
         }
 
         if isNarrowStandaloneRow(current) && !looksLikeParagraphContinuation(previousText: previousText, currentText: currentText) {
@@ -299,6 +315,10 @@ final class OCRService {
             paragraphScore += 3
         }
 
+        if looksLikeTrailingPhrase(previous: previous, current: current, stats: stats) {
+            paragraphScore += 3
+        }
+
         if endsSentence(previousText) && startsLikelyNewSentence(currentText) {
             paragraphScore -= 2
         }
@@ -331,7 +351,11 @@ final class OCRService {
             return false
         }
 
-        if trimmed.contains("/") || trimmed.contains("\\") || trimmed.hasPrefix("~") {
+        if trimmed.contains("\\") || trimmed.hasPrefix("~") || trimmed.hasPrefix("/") {
+            return true
+        }
+
+        if trimmed.contains("/") && !trimmed.contains(" ") {
             return true
         }
 
@@ -348,6 +372,31 @@ final class OCRService {
         }
 
         return false
+    }
+
+    private func looksLikeOrderedRow(_ text: String) -> Bool {
+        text.range(of: #"^\d{1,3}\s+\S"#, options: .regularExpression) != nil
+    }
+
+    private func shouldPreserveOrderedRowLineBreak(previous: OCRLine, current: OCRLine, next: OCRLine?, stats: LayoutStats) -> Bool {
+        let previousOrdered = looksLikeOrderedRow(previous.trimmedText)
+        let currentOrdered = looksLikeOrderedRow(current.trimmedText)
+
+        if previousOrdered && currentOrdered {
+            return hasOrderedRowAlignment(upper: previous, lower: current, stats: stats)
+        }
+
+        if currentOrdered, let next, looksLikeOrderedRow(next.trimmedText) {
+            return hasOrderedRowAlignment(upper: current, lower: next, stats: stats)
+        }
+
+        return false
+    }
+
+    private func hasOrderedRowAlignment(upper: OCRLine, lower: OCRLine, stats: LayoutStats) -> Bool {
+        let gap = max(0, upper.minY - lower.maxY)
+        let leftDelta = abs(upper.minX - lower.minX) / stats.contentWidth
+        return gap <= max(stats.medianGap * 1.25, stats.medianHeight * 0.9) && leftDelta <= 0.05
     }
 
     private func looksLikeHeading(_ line: OCRLine, fillRatio: CGFloat) -> Bool {
@@ -398,7 +447,7 @@ final class OCRService {
             return false
         }
 
-        if looksLikeFilenameOrPath(text) || looksLikeListItem(text) {
+        if looksLikeFilenameOrPath(text) || looksLikeListItem(text) || looksLikeOrderedRow(text) {
             return true
         }
 
@@ -407,6 +456,98 @@ final class OCRService {
         }
 
         return false
+    }
+
+    private func looksLikeTrailingPhrase(previous: OCRLine, current: OCRLine, stats: LayoutStats) -> Bool {
+        let previousText = previous.trimmedText
+        let currentText = current.trimmedText
+
+        guard !previousText.isEmpty, !currentText.isEmpty else {
+            return false
+        }
+
+        guard !endsSentence(previousText) else {
+            return false
+        }
+
+        guard !looksLikeFilenameOrPath(currentText), !looksLikeListItem(currentText), !looksLikeOrderedRow(currentText) else {
+            return false
+        }
+
+        guard currentText.range(of: #"[.!?:]$"#, options: .regularExpression) != nil else {
+            return false
+        }
+
+        let gap = max(0, previous.minY - current.maxY)
+        let leftDelta = abs(previous.minX - current.minX) / stats.contentWidth
+        let previousFill = previous.fillRatio(contentWidth: stats.contentWidth)
+
+        guard current.wordCount <= 3 else {
+            return false
+        }
+
+        guard previousFill >= 0.58 else {
+            return false
+        }
+
+        guard gap <= max(stats.medianGap * 1.15, stats.medianHeight * 0.8) else {
+            return false
+        }
+
+        return leftDelta <= 0.04
+    }
+
+    private func looksLikeWrappedSentence(previous: OCRLine, current: OCRLine, stats: LayoutStats) -> Bool {
+        let previousText = previous.trimmedText
+        let currentText = current.trimmedText
+
+        guard !previousText.isEmpty, !currentText.isEmpty else {
+            return false
+        }
+
+        guard !endsSentence(previousText) else {
+            return false
+        }
+
+        let gap = max(0, previous.minY - current.maxY)
+        guard gap <= max(stats.medianGap * 1.2, stats.medianHeight * 0.85) else {
+            return false
+        }
+
+        let leftDelta = abs(previous.minX - current.minX) / stats.contentWidth
+        guard leftDelta <= 0.05 else {
+            return false
+        }
+
+        if looksLikeParagraphContinuation(previousText: previousText, currentText: currentText) {
+            return true
+        }
+
+        let previousFill = previous.fillRatio(contentWidth: stats.contentWidth)
+        let currentFill = current.fillRatio(contentWidth: stats.contentWidth)
+        return previousFill >= 0.58 && currentFill >= 0.45 && (previous.wordCount >= 5 || current.wordCount >= 5)
+    }
+
+    private func continuesParagraphAfterSentence(previous: OCRLine, current: OCRLine, next: OCRLine?, stats: LayoutStats) -> Bool {
+        guard let next else {
+            return false
+        }
+
+        guard !endsSentence(current.trimmedText) else {
+            return false
+        }
+
+        guard current.wordCount <= 4 else {
+            return false
+        }
+
+        let previousFill = previous.fillRatio(contentWidth: stats.contentWidth)
+        let currentFill = current.fillRatio(contentWidth: stats.contentWidth)
+        guard abs(previousFill - currentFill) <= 0.18 else {
+            return false
+        }
+
+        return supportsParagraphRun(previous: current, next: next, stats: stats)
     }
 
     private func looksLikeParagraphContinuation(previousText: String, currentText: String) -> Bool {
