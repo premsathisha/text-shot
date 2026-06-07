@@ -7,53 +7,6 @@ protocol ToastPresenting {
     func show(_ message: String)
 }
 
-private final class RoundedVisualEffectView: NSVisualEffectView {
-    private let cornerRadius: CGFloat
-
-    init(frame frameRect: NSRect, cornerRadius: CGFloat) {
-        self.cornerRadius = cornerRadius
-        super.init(frame: frameRect)
-
-        material = .hudWindow
-        state = .active
-        blendingMode = .withinWindow
-        wantsLayer = true
-        layer?.cornerRadius = cornerRadius
-        layer?.masksToBounds = true
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func layout() {
-        super.layout()
-        layer?.cornerRadius = cornerRadius
-        updateMaskImage()
-    }
-
-    private func updateMaskImage() {
-        guard bounds.width > 0, bounds.height > 0 else {
-            maskImage = nil
-            return
-        }
-
-        let size = bounds.size
-        maskImage = NSImage(size: size, flipped: false) { _ in
-            NSColor.clear.setFill()
-            NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
-            NSColor.white.setFill()
-            NSBezierPath(
-                roundedRect: NSRect(origin: .zero, size: size),
-                xRadius: self.cornerRadius,
-                yRadius: self.cornerRadius
-            ).fill()
-            return true
-        }
-    }
-}
-
 @MainActor
 final class ToastPresenter {
     private let panel: NSPanel
@@ -84,7 +37,7 @@ final class ToastPresenter {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.ignoresMouseEvents = true
 
-        let root = RoundedVisualEffectView(frame: panel.contentView?.bounds ?? .zero, cornerRadius: cornerRadius)
+        let root = makeRootView(frame: panel.contentView?.bounds ?? .zero)
         root.autoresizingMask = [.width, .height]
 
         messageLabel.font = NSFont.systemFont(ofSize: 18, weight: .semibold)
@@ -92,11 +45,20 @@ final class ToastPresenter {
         messageLabel.textColor = .labelColor
         messageLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        root.addSubview(messageLabel)
+        let contentView: NSView
+        if #available(macOS 26.0, *), let glassView = root as? NSGlassEffectView {
+            contentView = NSView(frame: root.bounds)
+            contentView.autoresizingMask = [.width, .height]
+            glassView.contentView = contentView
+        } else {
+            contentView = root
+        }
+
+        contentView.addSubview(messageLabel)
         NSLayoutConstraint.activate([
-            messageLabel.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 12),
-            messageLabel.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -12),
-            messageLabel.centerYAnchor.constraint(equalTo: root.centerYAnchor)
+            messageLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
+            messageLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
+            messageLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
 
         panel.contentView = root
@@ -109,7 +71,6 @@ final class ToastPresenter {
         messageLabel.stringValue = message
         positionPanel()
 
-        // Instant text at t=0, then animate container in.
         panel.orderFrontRegardless()
 
         let targetFrame = panel.frame
@@ -159,6 +120,24 @@ final class ToastPresenter {
         )
 
         panel.setFrame(NSRect(origin: origin, size: NSSize(width: width, height: height)), display: true)
+    }
+
+    private func makeRootView(frame: NSRect) -> NSView {
+        if #available(macOS 26.0, *) {
+            let glassView = NSGlassEffectView(frame: frame)
+            glassView.cornerRadius = cornerRadius
+            glassView.style = .regular
+            return glassView
+        }
+
+        let effectView = NSVisualEffectView(frame: frame)
+        effectView.material = .hudWindow
+        effectView.state = .active
+        effectView.blendingMode = .withinWindow
+        effectView.wantsLayer = true
+        effectView.layer?.cornerRadius = cornerRadius
+        effectView.layer?.masksToBounds = true
+        return effectView
     }
 }
 

@@ -18,8 +18,9 @@ final class AppRelocator {
         self.openApplication = openApplication
     }
 
-    func promptToMoveIfNeeded() {
-        guard shouldPromptForMove() else { return }
+    @discardableResult
+    func promptToMoveIfNeeded() -> Bool {
+        guard shouldPromptForMove() else { return false }
 
         let alert = NSAlert()
         alert.alertStyle = .informational
@@ -28,8 +29,8 @@ final class AppRelocator {
         alert.addButton(withTitle: "Move to Applications")
         alert.addButton(withTitle: "Keep Here")
 
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        moveAndRelaunch()
+        guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        return moveAndRelaunch()
     }
 
     private func shouldPromptForMove() -> Bool {
@@ -48,7 +49,7 @@ final class AppRelocator {
         return Bundle.main.bundlePath.hasSuffix(".app")
     }
 
-    private func moveAndRelaunch() {
+    private func moveAndRelaunch() -> Bool {
         let sourceURL = Bundle.main.bundleURL
         let destinationURL = URL(fileURLWithPath: "/Applications").appendingPathComponent(sourceURL.lastPathComponent)
 
@@ -62,12 +63,14 @@ final class AppRelocator {
                     NSApp.terminate(nil)
                 }
             }
+            return true
         } catch {
             let errorAlert = NSAlert()
             errorAlert.alertStyle = .warning
             errorAlert.messageText = "Could not move Text Shot"
             errorAlert.informativeText = error.localizedDescription
             errorAlert.runModal()
+            return false
         }
     }
 

@@ -28,7 +28,7 @@ Use your keyboard shortcut to start a quick screen selection. Text Shot reads th
 
 ## Installation
 
-Download the DMG from the Releases section, open it, and move Text Shot into your Applications folder. Launch the app, grant the required permissions, set your preferred shortcut (default: Cmd + Shift + 2), and start capturing text.
+Download the DMG from the Releases section, open it, and move Text Shot into your Applications folder. Launch the app, grant Screen Recording permission, set your preferred shortcut (default: Cmd + Shift + 2), and start capturing text.
 
 ## Built from Source
 
@@ -55,7 +55,7 @@ For developers who want to build Text Shot locally.
 - `.generated/app/`: hidden local app bundle output for `npm run build`
 - `dist-appcast/`: Sparkle `appcast.xml` and update archive output for publishing
 - `release/`: latest DMG and `.sha256` only
-- `TESTING.md`: manual regression checklist for capture, permissions, menu bar behavior, multi-display, and OCR samples
+- `docs/TESTING.md`: manual regression checklist for capture, permissions, menu bar behavior, multi-display, and OCR samples
 
 ## Contributing
 
@@ -64,7 +64,7 @@ Keep changes aligned with the native Swift menu bar app and the release rules in
 - Create branches with the `codex/` prefix unless a different branch name is intentionally required.
 - Keep commits focused and descriptive so release notes and bug history stay readable.
 - Run `npm run typecheck` and `npm test` before opening a pull request.
-- If the change affects packaging or user-facing behavior, also run the relevant manual checks in `TESTING.md`.
+- If the change affects packaging or user-facing behavior, also run the relevant manual checks in `docs/TESTING.md`.
 - Every DMG release must bump the version, keep `package.json` aligned, and leave only the latest DMG and checksum in `release/`.
 
 GitHub Actions already enforces the baseline native checks on macOS for pull requests and pushes.

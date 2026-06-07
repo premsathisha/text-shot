@@ -87,12 +87,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private lazy var updateManager = Bootstrap.updateManager()
     private lazy var controller = Bootstrap.appController(updateManager: updateManager)
+    private let appRelocator = AppRelocator()
     private var statusItem: NSStatusItem?
     private var didWakeObserver: NSObjectProtocol?
     private var willTerminateObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         CaptureTempStore.shared.prepareForLaunch()
+        if appRelocator.promptToMoveIfNeeded() {
+            return
+        }
         _ = controller
         didWakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification,
