@@ -50,16 +50,6 @@ Cmd + Shift + 2
 2. It runs on-device Vision OCR and reconstructs the layout with line grouping.
 3. It places the result on your clipboard without uploading screenshot content to an external OCR service.
 
-## FAQ
-
-### Why does Text Shot need Screen Recording permission?
-
-Text Shot needs Screen Recording permission so it can capture the selected region on your Mac.
-
-### Does Text Shot upload screenshots anywhere?
-
-No. OCR runs on the Mac itself, and screenshot content is not uploaded for recognition.
-
 ## Privacy
 
 Text Shot is designed to stay local.
