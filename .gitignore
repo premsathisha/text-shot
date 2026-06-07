@@ -4,10 +4,30 @@
 /.swiftpm-module-cache/
 /.clang-module-cache/
 /native/settings-app/.build/
+/native/settings-app/.swiftpm/
 /native/settings-app/Package.resolved
 /(A Document Being Saved By swift-build*)
 /(A Document Being Saved By swift-test*)
 /.tmp.driveupload/
+.env
+.envrc
+.env.*.local
+.secrets
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.crt
+*.mobileprovision
+*.p7s
+*.p7b
+.build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
 .DS_Store
 *.log
 
