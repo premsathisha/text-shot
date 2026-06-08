@@ -45,14 +45,7 @@ final class ToastPresenter {
         messageLabel.textColor = .labelColor
         messageLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        let contentView: NSView
-        if #available(macOS 26.0, *), let glassView = root as? NSGlassEffectView {
-            contentView = NSView(frame: root.bounds)
-            contentView.autoresizingMask = [.width, .height]
-            glassView.contentView = contentView
-        } else {
-            contentView = root
-        }
+        let contentView = root
 
         contentView.addSubview(messageLabel)
         NSLayoutConstraint.activate([
@@ -123,10 +116,11 @@ final class ToastPresenter {
     }
 
     private func makeRootView(frame: NSRect) -> NSView {
-        if #available(macOS 26.0, *) {
-            let glassView = NSGlassEffectView(frame: frame)
-            glassView.cornerRadius = cornerRadius
-            glassView.style = .regular
+        if let glassViewClass = NSClassFromString("NSGlassEffectView") as? NSView.Type {
+            let glassView = glassViewClass.init(frame: frame)
+            glassView.wantsLayer = true
+            glassView.layer?.cornerRadius = cornerRadius
+            glassView.layer?.masksToBounds = true
             return glassView
         }
 
