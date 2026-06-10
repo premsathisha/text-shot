@@ -1,5 +1,5 @@
 # Repo Map
-Last Updated: 2026-06-04
+Last Updated: 2026-06-09
 
 ## Use This Map First
 This file is the canonical repository map for coding agents. Read it before broad scanning or indexing, then freely inspect any files needed to understand the task, verify the map, or investigate missing context.
@@ -24,11 +24,22 @@ This file is the canonical repository map for coding agents. Read it before broa
 |---|---|
 | `native/settings-app/Sources/TextShotSettings/AppEntry.swift` | `@main` app entry, `AppDelegate`, status menu, and Settings scene. |
 | `native/settings-app/Package.swift` | SwiftPM package entry for the native app and tests. |
-| `package.json` | Command entry: `npm run build` -> `bash scripts/build-settings-app.sh`; `npm start` -> `open "./.generated/app/Text Shot.app"`; `npm test` -> `bash scripts/test-native.sh`; `npm run typecheck` -> `bash scripts/typecheck-native.sh`; `npm run clean` -> `bash scripts/clean-generated.sh`; `npm run release:native` and `npm run dist` -> `bash scripts/release-native.sh`; `npm run release:native:minor` -> `bash scripts/release-native.sh --bump-minor`. |
+| `package.json` | Top-level command surface for build, run, test, typecheck, clean, and release workflows. |
 | `README.md` | Documented source workflow: `npm install`, `npm run build`, `npm start`, `npm test`, `bash scripts/release-native.sh --set-version <x.y.z>`. |
 | `.github/workflows/ci.yml` | CI entry point on `macos-15` with `npm ci`, `npm run typecheck`, and `npm test`. |
 | `.github/workflows/pages.yml` | GitHub Pages publish entry point for the site and Sparkle feed. |
 | `site/index.html` | Static homepage entry. |
+
+## Key Commands
+- Install: `npm install`
+- Build app bundle: `npm run build`
+- Open built app: `npm start`
+- Typecheck: `npm run typecheck`
+- Tests: `npm test`
+- Clean generated output: `npm run clean`
+- Release build: `npm run release:native`
+- Release build with minor bump: `npm run release:native:minor`
+- Explicit release version set: `bash scripts/release-native.sh --set-version <x.y.z>`
 
 ## Folder Map
 ### `.`
@@ -167,30 +178,6 @@ Important files:
 - `license`
 - `Sources/KeyboardShortcuts/`
 
-### `native/settings-app/Vendor/KeyboardShortcuts/Sources/KeyboardShortcuts`
-Purpose: the vendored hotkey implementation used by the app.
-Edit here when:
-- the dependency itself changes
-- the app behavior is not the target
-Important files:
-- `CarbonKeyboardShortcuts.swift`
-- `Key.swift`
-- `KeyboardShortcuts.swift`
-- `NSMenuItem++.swift`
-- `Name.swift`
-- `Recorder.swift`
-- `RecorderCocoa.swift`
-- `Shortcut.swift`
-- `Utilities.swift`
-- `ViewModifiers.swift`
-
-### `native/settings-app/Vendor/KeyboardShortcuts/Sources/KeyboardShortcuts/Localization`
-Purpose: localized strings for the vendored KeyboardShortcuts UI.
-Edit here when:
-- upstream localization text changes
-Important files:
-- `*/Localizable.strings` in each locale folder
-
 ### `scripts`
 Purpose: build, test, typecheck, clean, and release helpers for the native app.
 Edit here when:
@@ -324,25 +311,6 @@ Important files:
 | `Package.swift` | Declares the local Swift package wrapper for the vendored KeyboardShortcuts dependency so SwiftPM can consume it as part of the app build. It is the manifest layer for the embedded dependency. |
 | `license` | Preserves the upstream dependency’s license text inside the vendored tree. It is part of the legal and provenance record for embedded third-party code. |
 
-### `native/settings-app/Vendor/KeyboardShortcuts/Sources/KeyboardShortcuts`
-| File | Purpose |
-|---|---|
-| `CarbonKeyboardShortcuts.swift` | Implements Carbon-based low-level shortcut plumbing inside the vendored dependency. It is part of the dependency’s platform-integration core. |
-| `Key.swift` | Defines key-code and shortcut helper behavior inside the vendored dependency. It is part of the dependency’s internal keyboard model. |
-| `KeyboardShortcuts.swift` | Exposes the dependency’s public API surface that the app consumes for shortcut behavior. It is the main integration point between app code and vendored library code. |
-| `NSMenuItem++.swift` | Provides dependency-local menu-item helper extensions used by the shortcut package. It supports the package’s AppKit-facing behavior. |
-| `Name.swift` | Handles shortcut naming and identity inside the dependency. It is part of how the package tracks and refers to configured shortcuts. |
-| `Recorder.swift` | Implements the core recorder behavior for capturing shortcut input in the dependency. It is central to the shortcut-selection UX provided upstream. |
-| `RecorderCocoa.swift` | Implements the Cocoa-backed portions of the shortcut recorder. It is part of the dependency’s platform-specific UI behavior. |
-| `Shortcut.swift` | Defines the shortcut model type used throughout the dependency. It is the dependency’s core data structure for represented key combinations. |
-| `Utilities.swift` | Provides shared helper behavior used across the vendored shortcut package. It is support code that keeps the dependency implementation DRY. |
-| `ViewModifiers.swift` | Provides SwiftUI view modifiers used by the vendored shortcut package. It is the integration layer that makes the dependency ergonomic in SwiftUI code. |
-
-### `native/settings-app/Vendor/KeyboardShortcuts/Sources/KeyboardShortcuts/Localization`
-| File | Purpose |
-|---|---|
-| `*/Localizable.strings` | Holds the localized UI strings used by the vendored shortcut recorder across supported languages. It is the translation surface for the embedded dependency’s user-facing text. |
-
 ### `scripts`
 | File | Purpose |
 |---|---|
@@ -369,6 +337,8 @@ Important files:
 - `UpdateManager.swift` chooses between disabled and Sparkle-backed update handling based on the bundle info keys.
 - `scripts/build-settings-app.sh` assembles the app bundle, and `scripts/release-native.sh` is the release source of truth for version bumps, appcast generation, and `release/` output.
 - `site/script.js` is runtime wiring only; it does not own release data, it reads the latest GitHub release at page load.
+- `assets/` is branding/source artwork, while `release/` and `dist-appcast/` are generated release outputs.
+- The vendored `KeyboardShortcuts` tree is third-party code and should usually be treated as an external dependency boundary, not a first-stop app-editing surface.
 
 ## Common Tasks → Files To Edit
 | Task Type | Start Here | Usually Also Check |
@@ -394,18 +364,11 @@ Important files:
 - CI mirrors the native checks on `macos-15` with `npm ci`, `npm run typecheck`, and `npm test`.
 
 ## Known Generated Or External Files
-- `.generated/` - local app bundle output from `npm run build`.
-- `release/` - shipping DMG and `.sha256`; should contain only the latest pair.
-- `dist-appcast/` - Sparkle feed and archive output for publishing.
-- `native/settings-app/.build/` - SwiftPM build output.
-- `.swiftpm-module-cache/` and `.clang-module-cache/` - local caches used by the helper scripts.
-- `node_modules/` - npm dependency tree.
-- `native/settings-app/Package.resolved` - generated SwiftPM resolution file and intentionally ignored here.
-- `native/settings-app/Vendor/KeyboardShortcuts/` - vendored third-party source tree.
-- `dist-appcast/appcast.xml` and `dist-appcast/Text Shot-3.0.5.zip` - generated publish artifacts from the last release snapshot.
+- Generated build output, release artifacts, caches, and other ignored local files are intentionally omitted from this map.
+- `native/settings-app/Vendor/KeyboardShortcuts/` is vendored third-party source and should be treated as an external dependency boundary.
 
 ## Stale Or Unclear Areas
-- `site/index.html` hardcodes the badge `v3.0.5`, while `site/script.js` replaces it at runtime from GitHub Releases; that HTML value can go stale between releases.
+- `site/index.html` hardcodes the badge `v3.0.5`, while `site/script.js` replaces it at runtime from GitHub Releases. Treat the runtime release data as authoritative and the HTML value as fallback copy that can drift.
 - `site/script.js` depends on the GitHub API and on the latest release having a downloadable `.dmg`.
 - `assets/screenshot.png` and `site/assets/screenshot.png` should stay in sync if the homepage image changes.
 - `native/settings-app/Vendor/KeyboardShortcuts` is vendored upstream code, so local edits there should be treated as external dependency changes.
