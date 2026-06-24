@@ -368,7 +368,7 @@ Important files:
 - `native/settings-app/Vendor/KeyboardShortcuts/` is vendored third-party source and should be treated as an external dependency boundary.
 
 ## Stale Or Unclear Areas
-- `site/index.html` hardcodes the badge `v3.0.5`, while `site/script.js` replaces it at runtime from GitHub Releases. Treat the runtime release data as authoritative and the HTML value as fallback copy that can drift.
+- `site/index.html` hardcodes the badge `v3.0.6`, while `site/script.js` replaces it at runtime from GitHub Releases. Treat the runtime release data as authoritative and the HTML value as fallback copy that can drift.
 - `site/script.js` depends on the GitHub API and on the latest release having a downloadable `.dmg`.
 - `assets/screenshot.png` and `site/assets/screenshot.png` should stay in sync if the homepage image changes.
 - `native/settings-app/Vendor/KeyboardShortcuts` is vendored upstream code, so local edits there should be treated as external dependency changes.
