@@ -2,7 +2,7 @@
   "name": "text-shot",
   "productName": "Text Shot",
   "version": "3.0.6",
-  "description": "Fast macOS background OCR utility",
+  "description": "Private screenshot-to-text OCR app for macOS",
   "author": "Prem Sathisha Etagi",
   "license": "MIT",
   "scripts": {
