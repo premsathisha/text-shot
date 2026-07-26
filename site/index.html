@@ -36,7 +36,7 @@
         </a>
 
         <div class="nav-actions">
-          <span class="nav-badge" id="release-badge">v3.0.6</span>
+          <span class="nav-badge" id="release-badge" aria-label="Current version v3.0.6">v3.0.6</span>
         </div>
       </nav>
 
@@ -58,9 +58,9 @@
           </a>
           <a
             class="btn-ghost"
-            href="https://github.com/premsathisha/text-shot"
+            href="https://github.com/premsathisha/text-shot#readme"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
               <rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.2"/>
@@ -70,8 +70,25 @@
           </a>
         </div>
 
+        <div class="release-details" aria-label="Download details">
+          <div class="release-specs">
+            <span id="release-size">5 MB</span>
+            <span>Apple Silicon</span>
+            <span>macOS 13 Ventura or later</span>
+          </div>
+          <button class="install-trigger" id="install-trigger" type="button" aria-haspopup="dialog" aria-controls="install-modal" aria-expanded="false">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-3a1 1 0 0 0-.867.5 1 1 0 1 1-1.731-1A3 3 0 0 1 13 8a3 3 0 0 1-2 2.83V11a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1 1 1 0 1 0 0-2Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+            </svg>
+            How to Install
+          </button>
+          <noscript>
+            <p class="install-noscript">JavaScript is disabled. Open the <a href="https://github.com/premsathisha/text-shot#install--quick-start">installation guide</a> instead.</p>
+          </noscript>
+        </div>
+
         <div class="hero-screenshot-placeholder">
-          <img src="./assets/screenshot.png?v=20260328b" alt="Text Shot screenshot" />
+          <img src="./assets/screenshot.png" alt="Text Shot screenshot" />
         </div>
       </section>
 
@@ -135,7 +152,7 @@
               class="license-link"
               href="https://github.com/premsathisha/text-shot/blob/main/LICENSE"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               MIT License
             </a>
@@ -143,6 +160,49 @@
         </div>
       </footer>
     </main>
+
+    <div class="install-modal-overlay" id="install-modal-overlay" aria-hidden="true">
+      <div class="install-modal" id="install-modal" role="dialog" aria-modal="true" aria-labelledby="install-dialog-title" tabindex="-1">
+        <button class="install-modal-close" id="dialog-close" type="button" aria-label="Close">
+          <span class="install-modal-close-icon" aria-hidden="true"></span>
+        </button>
+        <h2 id="install-dialog-title">How to open Text Shot</h2>
+        <p class="install-modal-lead">Text Shot isn’t notarized by Apple, so macOS may show a warning even though the app is safe. This is a <strong>one-time setup</strong> and takes less than a minute.</p>
+        <ol class="install-steps">
+          <li><span>Open the installer, then drag <strong>Text Shot</strong> into your <strong>Applications</strong> folder.</span></li>
+          <li>
+            <div class="install-step-stack">
+              <p>Open <strong>Terminal</strong> and paste this command:</p>
+              <div class="install-code-block">
+                <code>xattr -dr com.apple.quarantine "/Applications/Text Shot.app"</code>
+                <button
+                  class="install-copy-button"
+                  id="copy-command"
+                  type="button"
+                  data-copy-value='xattr -dr com.apple.quarantine "/Applications/Text Shot.app"'
+                  aria-label="Copy command"
+                  onclick="copyInstallCommand(this)"
+                >
+                  <svg class="install-copy-icon install-copy-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <rect width="14" height="14" x="8" y="8" rx="2" />
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                  </svg>
+                  <svg class="install-copy-icon install-copy-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="m5 12 4 4L19 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </li>
+        </ol>
+        <div class="install-callout">
+          <svg class="install-callout-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z" clip-rule="evenodd" />
+          </svg>
+          <p><strong>Simple updates</strong> — once installed, check for new releases with one click.</p>
+        </div>
+      </div>
+    </div>
 
     <script src="./script.js"></script>
   </body>

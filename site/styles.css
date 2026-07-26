@@ -10,6 +10,21 @@
   --shadow-soft: 0 24px 56px rgba(0, 0, 0, 0.42);
   --blur-amount: 1.5px;
   --dim-opacity: 0.65;
+  --hero-download-gap: 2.35rem;
+  --modal-overlay: oklch(0 0 0 / 0.6);
+  --modal-surface: oklch(0.2939 0.0036 286.18);
+  --modal-text: oklch(0.9707 0.0027 286.35);
+  --modal-muted: oklch(0.6812 0.0073 286.21);
+  --modal-control: oklch(0.3492 0.0034 286.22);
+  --modal-control-hover: oklch(0.4024 0.0033 286.25);
+  --modal-accent: oklch(0.707 0.21 258.5);
+  --modal-code-text: oklch(0.9233 0.0067 286.27);
+  --modal-button-text: oklch(0.752 0.0057 286.26);
+  --modal-button-bg: oklch(1 0 0 / 0.12);
+  --modal-button-hover: oklch(1 0 0 / 0.2);
+  --modal-success: oklch(0.82 0.18 146);
+  --modal-white: oklch(1 0 0);
+  --modal-shadow: 0 24px 64px oklch(0 0 0 / 0.5);
 }
 
 * {
@@ -28,6 +43,13 @@ body {
   color: var(--text-body);
   font-size: 15px;
   line-height: 22.5px;
+}
+
+body.install-modal-open {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
 }
 
 a {
@@ -118,7 +140,7 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-top: 2.35rem;
+  margin-top: var(--hero-download-gap);
 }
 
 .btn-primary,
@@ -157,8 +179,68 @@ button:focus-visible {
   border-color: var(--hover-fill);
 }
 
+.release-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.48rem;
+  margin-top: 1.05rem;
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.release-specs {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+}
+
+.release-specs span {
+  white-space: nowrap;
+}
+
+.release-specs span + span::before {
+  content: "·";
+  margin: 0 0.4rem;
+}
+
+.install-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0;
+  border: 0;
+  color: var(--text-strong);
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.install-trigger:hover,
+.install-trigger:focus-visible {
+  opacity: 0.7;
+}
+
+.install-noscript {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 12px;
+}
+
+.install-noscript a {
+  color: var(--text-strong);
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
 .hero-screenshot-placeholder {
-  margin-top: 3rem;
+  margin-top: var(--hero-download-gap);
   background: var(--subtle-fill);
   border: 1px solid var(--divider);
   border-radius: 18px;
@@ -170,6 +252,276 @@ button:focus-visible {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.install-modal-overlay {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--modal-overlay);
+  overscroll-behavior: contain;
+  touch-action: none;
+  backdrop-filter: blur(4px);
+}
+
+.install-modal-overlay.open {
+  display: flex;
+}
+
+.install-modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+  padding: 32px;
+  border-radius: 16px;
+  background: var(--modal-surface);
+  color: var(--modal-text);
+  box-shadow: var(--modal-shadow);
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  text-align: left;
+}
+
+.install-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--modal-muted);
+  background: var(--modal-control);
+  cursor: pointer;
+}
+
+.install-modal-close-icon {
+  position: relative;
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+.install-modal-close-icon::before,
+.install-modal-close-icon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.install-modal-close-icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.install-modal-close-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.install-modal-close:hover,
+.install-modal-close:focus-visible {
+  color: var(--modal-text);
+  background: var(--modal-control-hover);
+}
+
+.install-modal h2 {
+  margin: 0 36px 20px 0;
+  color: var(--modal-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+}
+
+.install-modal strong {
+  color: var(--modal-text);
+  font-weight: 600;
+}
+
+.install-modal-lead {
+  margin: 0 0 18px;
+  color: var(--modal-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  counter-reset: steps;
+}
+
+.install-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--modal-text);
+  font-size: 14px;
+  line-height: 22px;
+  counter-increment: steps;
+}
+
+.install-steps li::before {
+  content: counter(steps);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--modal-accent);
+  color: var(--modal-white);
+  font-family: -apple-system, system-ui, Inter, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: normal;
+  line-height: 18px;
+}
+
+.install-steps li > span,
+.install-step-stack {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-step-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.install-step-stack p {
+  margin: 0;
+  color: var(--modal-text);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.install-code-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--modal-surface);
+  box-shadow: none;
+}
+
+.install-code-block code {
+  min-width: 0;
+  color: var(--modal-code-text);
+  font-family: "SF Mono", "Fira Mono", Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.install-copy-button {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  color: var(--modal-button-text);
+  background: var(--modal-button-bg);
+  cursor: pointer;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.install-copy-button:hover,
+.install-copy-button:focus-visible {
+  color: var(--modal-white);
+  background: var(--modal-button-hover);
+}
+
+.install-copy-button:active {
+  transform: scale(0.94);
+}
+
+.install-copy-icon {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.install-copy-icon-copy {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+.install-copy-icon-check {
+  opacity: 0;
+  transform: scale(0.5) rotate(-20deg);
+}
+
+.install-copy-button.copied {
+  color: var(--modal-success);
+}
+
+.install-copy-button.copied .install-copy-icon-copy {
+  opacity: 0;
+  transform: scale(0.5) rotate(20deg);
+}
+
+.install-copy-button.copied .install-copy-icon-check {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+.install-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--modal-accent) 9%, transparent);
+}
+
+.install-callout-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--modal-accent);
+}
+
+.install-callout p {
+  margin: 0;
+  color: var(--modal-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .feature-grid {
@@ -247,6 +599,10 @@ html.window-blurred .site-shell {
 }
 
 @media (max-width: 700px) {
+  :root {
+    --hero-download-gap: 2.2rem;
+  }
+
   .site-shell {
     padding: 1.1rem 1rem 2rem;
   }
@@ -276,7 +632,22 @@ html.window-blurred .site-shell {
   }
 
   .hero-screenshot-placeholder {
-    margin-top: 2.2rem;
+    border-radius: 14px;
+  }
+
+  .release-details {
+    gap: 0.45rem;
+  }
+
+  .release-specs {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    gap: 0;
+  }
+
+  .install-modal {
+    padding: 24px;
     border-radius: 14px;
   }
 

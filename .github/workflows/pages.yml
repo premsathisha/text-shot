@@ -44,6 +44,13 @@ jobs:
           cp -R "assets/Website Icon (logo on page : header)" ".pages/assets/Website Icon (logo on page : header)"
           mkdir -p .pages/dist-appcast
           cp -R dist-appcast/. .pages/dist-appcast/
+          css_hash=$(sha256sum .pages/styles.css | cut -c1-12)
+          js_hash=$(sha256sum .pages/script.js | cut -c1-12)
+          mv .pages/styles.css ".pages/styles.${css_hash}.css"
+          mv .pages/script.js ".pages/script.${js_hash}.js"
+          find .pages -maxdepth 1 -name '*.html' -print0 | xargs -0 sed -i \
+            -e "s|./styles.css|./styles.${css_hash}.css|g" \
+            -e "s|./script.js|./script.${js_hash}.js|g"
           touch .pages/.nojekyll
 
       - name: Upload Pages artifact
