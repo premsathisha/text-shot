@@ -148,15 +148,12 @@ final class ToastPresenter {
     }
 
     private static func makeSurface(frame: NSRect) -> (root: NSView, content: NSView) {
-        if #available(macOS 26.0, *) {
-            let content = NSView(frame: frame)
-            content.autoresizingMask = [.width, .height]
-
-            let glass = NSGlassEffectView(frame: frame)
-            glass.style = .regular
-            glass.cornerRadius = cornerRadius
-            glass.contentView = content
-            return (glass, content)
+        if let glassViewClass = NSClassFromString("NSGlassEffectView") as? NSView.Type {
+            let glass = glassViewClass.init(frame: frame)
+            glass.wantsLayer = true
+            glass.layer?.cornerRadius = cornerRadius
+            glass.layer?.masksToBounds = true
+            return (glass, glass)
         }
 
         if NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency {
