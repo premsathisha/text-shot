@@ -1,5 +1,5 @@
 # Repo Map
-Last Updated: 2026-06-09
+Last Updated: 2026-07-29
 
 ## Use This Map First
 This file is the canonical repository map for coding agents. Read it before broad scanning or indexing, then freely inspect any files needed to understand the task, verify the map, or investigate missing context.
@@ -28,6 +28,8 @@ This file is the canonical repository map for coding agents. Read it before broa
 | `README.md` | Documented source workflow: `npm install`, `npm run build`, `npm start`, `npm test`, `bash scripts/release-native.sh --set-version <x.y.z>`. |
 | `.github/workflows/ci.yml` | CI entry point on `macos-15` with `npm ci`, `npm run typecheck`, and `npm test`. |
 | `.github/workflows/pages.yml` | GitHub Pages publish entry point for the site and Sparkle feed. |
+| `.github/workflows/dependency-review.yml` | Pull-request dependency review using GitHub's dependency review action. |
+| `.github/workflows/codeql.yml` | Scheduled, push, and pull-request CodeQL analysis for Swift and JavaScript. |
 | `site/index.html` | Static homepage entry. |
 
 ## Key Commands
@@ -67,6 +69,8 @@ Edit here when:
 Important files:
 - `ci.yml`
 - `pages.yml`
+- `dependency-review.yml`
+- `codeql.yml`
 
 ### `assets`
 Purpose: source artwork for the app, site, and screenshots.
@@ -222,6 +226,8 @@ Important files:
 |---|---|
 | `ci.yml` | Defines the continuous-integration workflow that validates native build and test expectations on GitHub-hosted macOS runners. It is the remote enforcement layer for repo health. |
 | `pages.yml` | Defines the GitHub Pages publishing workflow that packages the site and selected release-facing assets for the public web presence. It is the automation boundary between source files and the published website/update surface. |
+| `dependency-review.yml` | Checks pull-request dependency changes for known vulnerabilities and license risks before merge. |
+| `codeql.yml` | Runs CodeQL analysis for the native Swift app and static-site JavaScript on pushes, pull requests, and a weekly schedule. |
 
 ### `assets`
 | File | Purpose |
